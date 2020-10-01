@@ -23,11 +23,13 @@ This repository contains the source code and the implementation details for the 
 #### Week 1: Research
 On the first week of the project each member has to research on a specific topic.
 - Athina Nisioti:      Medical Applications
-- Dimitris Gkouletsos: Control Applications
+- Dimitris Gkouletsos: Control & Artificial Intelligence (D.G. is considered a control pioneer. He is a livin' control legend.)
 - Ziyad Sheebaelhamd:  GANs
 - Konstantinos Zisis:  Game Theory Applications
 
 *Please Attach the papers - resources found under the "Resources" section!!!*
+******* https://www.youtube.com/watch?v=Ut-sSgeCZeo&list=RDUt-sSgeCZeo&start_radio=1
+******* https://www.youtube.com/watch?v=yCGFfz7LfDQ
 
 ## Resources
 

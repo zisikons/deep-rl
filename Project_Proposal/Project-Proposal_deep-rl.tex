@@ -1,0 +1,80 @@
+\immediate\write18{makeindex main.nlo -s nomencl.ist -o main.nls}
+\documentclass[12pt,oneside]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+%----Figures packages
+\usepackage{graphicx}
+\graphicspath{ {figures/} }
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{float}
+
+%----Bibliography  along with 1st line command
+\usepackage{nomencl}
+
+%---Math packagesf
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{bm}
+
+%---Geometry and style of A4
+\usepackage[a4paper,width=150mm,top=5mm,bottom=5mm]{geometry}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\renewcommand{\sectionmark}[1]{\markboth{#1}{}} % set the \leftmark
+\fancyhf{}
+
+%--Style packages
+\renewcommand \thesection{\Roman{section}}
+\renewcommand\thesubsection{\Alph{subsection}}
+\usepackage{sectsty,textcase}
+\subsectionfont{\normalfont\itshape}
+\usepackage{titlesec}
+\titlelabel{\thetitle.\quad}
+\usepackage{titling}
+
+
+\bibliographystyle{unsrt}
+
+%------Title and Authors
+\title{\Huge\textbf{Project Proposal: Deep Reinforcement Learning}}
+\author{
+  Dimitrios Gkouletsos\\
+  \texttt{first1.last1@xxxxx.com}
+  \and
+  Nyquist\\
+  \texttt{first2.last2@xxxxx.com}
+  \and
+  Bode\\
+  \texttt{first2.last2@xxxxx.com}
+  \and
+  Kalman\\
+  \texttt{first2.last2@xxxxx.com}
+}
+\date{\today}
+
+%------------------------BEGIN DOCUMENT-----------------------------------------------------
+\begin{document}
+\maketitle
+
+%------------------------IDEA-----------------------------------------------------
+\section{Idea}
+	First citation here \cite{sutton} !!!!
+	
+%------------------------METHODS-----------------------------------------------------
+\section{Methods}
+
+%------------------------DATASETS-----------------------------------------------------
+\section{Datasets}
+	
+%------------------------PROCEDURE-----------------------------------------------------
+\section{Procedure}
+
+%------------------------LITERATURE OVERVIEW-----------------------------------------------------
+\section{Literature Overview}
+
+%-----------------------REFERENCES----------------------------------------------------
+\bibliography{references}
+
+\end{document}

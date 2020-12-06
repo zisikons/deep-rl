@@ -20,6 +20,11 @@
 
 %---Geometry and style of A4
 \usepackage[a4paper,width=150mm,top=5mm,bottom=5mm]{geometry}
+\geometry{bmargin = 0cm}
+\geometry{tmargin = 0cm}
+\geometry{ lmargin=0.8cm}
+\geometry{ rmargin=0.8cm}
+
 \usepackage{fancyhdr}
 \pagestyle{fancy}
 \renewcommand{\sectionmark}[1]{\markboth{#1}{}} % set the \leftmark
@@ -34,23 +39,22 @@
 \titlelabel{\thetitle.\quad}
 \usepackage{titling}
 
-
 \bibliographystyle{unsrt}
 
 %------Title and Authors
 \title{\Huge\textbf{Safe Deep Reinforcement Learning for Multi-Agent System }}
 \author{
   Dimitrios Gkouletsos\\
-  \texttt{first1.last1@xxxxx.com}
+  %\texttt{first1.last1@xxxxx.com}
   \and
   Nyquist\\
-  \texttt{first2.last2@xxxxx.com}
+  %\texttt{first2.last2@xxxxx.com}
   \and
   Bode\\
-  \texttt{first2.last2@xxxxx.com}
+  %\texttt{first2.last2@xxxxx.com}
   \and
   Kalman\\
-  \texttt{first2.last2@xxxxx.com}
+  %\texttt{first2.last2@xxxxx.com}
 }
 \date{\today}
 
@@ -61,7 +65,7 @@
 %------------------------IDEA-----------------------------------------------------
 \section{Idea}
 In this project, we propose a Deep Reinforcement Learning algorithm along with safety margins based on \cite{SafeExploration}. Our goal is to extend the 
-single-agent application, presented in \cite{SafeExploration}, into a multi-agent enviroment. 
+single-agent application \cite{SafeExploration} into a multi-agent enviroment. 
 
 %------------------------METHODS-----------------------------------------------------
 \section{Methods}
@@ -84,6 +88,7 @@ test the model.
 \section{Literature Overview}
 
 %-----------------------REFERENCES----------------------------------------------------
+\newpage
 \bibliography{references}
 
 \end{document}

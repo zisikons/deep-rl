@@ -5,6 +5,7 @@ import torch.optim as optimizer
 
 import numpy as np
 import ipdb
+
 class ConstraintNetwork(nn.Module):
     def __init__(self, state_dim=14, act_dim=2, hidden_size = 10, lr = 3e-5):
         super(ConstraintNetwork, self).__init__()
@@ -12,7 +13,7 @@ class ConstraintNetwork(nn.Module):
         self.layer2 = nn.Linear(hidden_size, act_dim)
         self.layers = [self.layer1, self.layer2]
 
-        self.optimizer = optimizer.Adam(self.parameters(), lr) 
+        self.optimizer = optimizer.Adam(self.parameters(), lr)
         self.init_weights()
 
     def init_weights(self):
@@ -23,25 +24,25 @@ class ConstraintNetwork(nn.Module):
        x = nn.ReLU()(self.layer1(x))
        x = self.layer2(x)
        return x
-   
+
     def train(self, state, action, next_state, epochs=25, batch_size = 256, split_ratio = 0.25):
-       
-       shuffle_idx = np.arange(state.shape[0]) 
+
+       shuffle_idx = np.arange(state.shape[0])
        np.random.shuffle(shuffle_idx)
        split_idx =  int(state.shape[0]*split_ratio)
        train_idx = shuffle_idx[split_idx:]
        val_idx   = shuffle_idx[0:split_idx:]
-       
+
        # Train data
        train_state      = state[train_idx,:]
        train_action     = action[train_idx,:]
        train_next_state = next_state[train_idx,:]
-       
+
        # Validation data
        val_state      = state[val_idx,:]
        val_action     = action[val_idx,:]
-       val_next_state = next_state[val_idx,:] 
-        
+       val_next_state = next_state[val_idx,:]
+
        for epoch in range(epochs):
            for batch in range(train_state.shape[0]//batch_size):
                 batch_idx        = np.random.choice(np.arange(train_state.shape[0]), size = batch_size)
@@ -81,22 +82,36 @@ def main():
 
     import pandas as pd
     import ipdb
-    
 
-    state = pd.read_csv("D_state.csv").to_numpy()
-    action = pd.read_csv("D_action.csv").to_numpy()
-    next_state = pd.read_csv("D_next_state.csv").to_numpy()
-    
+    # Import Dataset
+    state       = pd.read_csv("D_state.csv").to_numpy()
+    action      = pd.read_csv("D_action.csv").to_numpy()
+    next_state  = pd.read_csv("D_next_state.csv").to_numpy()
+    constraints = pd.read_csv("D_next_state.csv").to_numpy()
+
+    # Remove Indices
     state = state[:,1:]
     action = action[:,1:]
     next_state = next_state[:,1:]
-    
+    constraints = constraints[:,1:]
+
     # split the dataset into agents
-    states = np.split(state, 3 , axis = 1)
-    actions = np.split(action, 3 , axis = 1)
-    next_states = np.split(next_state, 3 , axis = 1)
-    net = ConstraintNetwork(state_dim = 14, act_dim = 2)
-    
+    #states = np.split(state, 3 , axis = 1)
+    #actions = np.split(action, 3 , axis = 1)
+    #next_states = np.split(next_state, 3 , axis = 1)
+
+    # Number of networks 
+    N = constraints.shape[1]
+    constraint_networks = []
+
+    for i in range(N):
+        # Define Network for constraint i
+        net = ConstraintNetwork(state_dim = 14, act_dim = 2)
+        net.train(states, actions, next_states)
+
+        # Store
+        constraint_networks.append(net)
+
     '''
     1)1-2, 2)2-3, 3)3-1
 

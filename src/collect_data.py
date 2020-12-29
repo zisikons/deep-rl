@@ -10,7 +10,6 @@ from multiagent.policy import InteractivePolicy
 import multiagent.scenarios as scenarios
 
 from DDPG import DDPGagent
-from NormalizeEnv import NormalizedEnv
 from Noise import OUNoise
 from operator import add
 from gym.wrappers.monitoring.video_recorder import VideoRecorder

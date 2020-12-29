@@ -36,7 +36,7 @@ def main():
 
     # Training Parameters
     batch_size = 128
-    episodes = 5000
+    episodes = 2000
     steps_per_episode = 200
  
     

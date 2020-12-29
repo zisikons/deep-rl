@@ -2,6 +2,8 @@ import numpy as np
 from multiagent.core import World, Agent, Landmark
 from multiagent.scenario import BaseScenario
 
+import ipdb
+
 
 class Scenario(BaseScenario):
     def make_world(self):
@@ -83,7 +85,7 @@ class Scenario(BaseScenario):
                 if self.is_collision(a, agent):
                     rew -= 1
         return rew
-    
+
     def observation(self, agent, world):
         # get positions of all entities in this agent's reference frame
         entity_pos = []
@@ -107,11 +109,16 @@ class Scenario(BaseScenario):
     def constraints(self,agent, world):
         # Constraint Type 1: Collisions with other robots
         other_agents = [a for a in world.agents if a is not agent]
-        ipdb.set_trace()
-        for i, other in enumerate(other_agents):
-            print(other.name)
-            
 
+        collision_signals = np.zeros(len(world.agents) - 1)
+        for i, other in enumerate(other_agents):
+            collision_signals[i] = np.linalg.norm(other.state.p_pos - agent.state.p_pos)**2
+
+
+        # Constraint Type 2: Obstacles
+        # TODO
+
+        return collision_signals
 
 
 

@@ -12,19 +12,22 @@ class MultiAgentEnv(gym.Env):
     }
 
     def __init__(self, world, reset_callback=None, reward_callback=None,
-                 observation_callback=None, info_callback=None,
+                 observation_callback=None, constraint_callback=None, info_callback=None,
                  done_callback=None, shared_viewer=True):
 
         self.world = world
         self.agents = self.world.policy_agents
         # set required vectorized gym env property
         self.n = len(world.policy_agents)
+
         # scenario callbacks
         self.reset_callback = reset_callback
         self.reward_callback = reward_callback
         self.observation_callback = observation_callback
         self.info_callback = info_callback
         self.done_callback = done_callback
+        self.constraint_callback = constraint_callback
+
         # environment parameters
         self.discrete_action_space = False
         # if true, action is a number 0...N, otherwise action is a one-hot N-dimensional vector
@@ -38,6 +41,8 @@ class MultiAgentEnv(gym.Env):
         # configure spaces
         self.action_space = []
         self.observation_space = []
+        self.constraint_space = []
+
         for agent in self.agents:
             total_action_space = []
             # physical action space
@@ -64,10 +69,15 @@ class MultiAgentEnv(gym.Env):
                 self.action_space.append(act_space)
             else:
                 self.action_space.append(total_action_space[0])
+
             # observation space
             obs_dim = len(observation_callback(agent, self.world))
             self.observation_space.append(spaces.Box(low=-np.inf, high=+np.inf, shape=(obs_dim,), dtype=np.float32))
             agent.action.c = np.zeros(self.world.dim_c)
+
+            # constraint space
+            constraint_dim = len(constraint_callback(agent, self.world))
+            self.constraint_space.append(spaces.Box(low=0, high=+np.inf, shape=(constraint_dim,), dtype=np.float32))
 
         # rendering
         self.shared_viewer = shared_viewer
@@ -82,12 +92,16 @@ class MultiAgentEnv(gym.Env):
         reward_n = []
         done_n = []
         info_n = {'n': []}
+        constraint_n = []
+
         self.agents = self.world.policy_agents
         # set action for each agent
         for i, agent in enumerate(self.agents):
             self._set_action(action_n[i], agent, self.action_space[i])
+
         # advance world state
         self.world.step()
+
         # record observation for each agent
         for agent in self.agents:
             obs_n.append(self._get_obs(agent))
@@ -96,12 +110,15 @@ class MultiAgentEnv(gym.Env):
 
             info_n['n'].append(self._get_info(agent))
 
+            # Get constraint for agent i
+            constraint_n.append(self._get_constraints(agent))
+
         # all agents get total reward in cooperative case
         reward = np.sum(reward_n)
         if self.shared_reward:
             reward_n = [reward] * self.n
 
-        return obs_n, reward_n, done_n, info_n
+        return obs_n, reward_n, done_n, constraint_n, info_n
 
     def reset(self):
         # reset world
@@ -139,6 +156,12 @@ class MultiAgentEnv(gym.Env):
         if self.reward_callback is None:
             return 0.0
         return self.reward_callback(agent, self.world, action_n)
+
+    # get constraints for a particular agent
+    def _get_constraints(self, agent):
+        if self.constraint_callback is None:
+            return np.zeros(0)
+        return self.constraint_callback(agent, self.world)
 
     # set env action for a particular agent
     def _set_action(self, action, agent, action_space, time=None):

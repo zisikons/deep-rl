@@ -25,7 +25,7 @@ class ConstraintNetwork(nn.Module):
        x = self.layer2(x)
        return x
 
-    def train(self, state, action, constraints_diff, epochs=25, batch_size = 256, split_ratio = 0.25):
+    def train(self, state, action, constraints_diff, epochs=80, batch_size = 256, split_ratio = 0.10):
 
        shuffle_idx = np.arange(state.shape[0])
        np.random.shuffle(shuffle_idx)

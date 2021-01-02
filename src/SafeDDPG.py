@@ -15,18 +15,20 @@ import ipdb
 
 import cvxpy
 import osqp
+import scipy
+from scipy import sparse
 
 
 # Define Solver Globaly
 solver = osqp.OSQP()
 
-
 class SafeDDPGagent:
 
-    def __init__(self, state_dim, act_dim, num_agents, col_margin = 0.1 ,hidden_size=256, actor_learning_rate=1e-4, critic_learning_rate=1e-3, gamma=0.99, tau=1e-2, max_memory_size=6000):
+    def __init__(self, state_dim, act_dim, constraint_dim, num_agents, col_margin = 0.5 ,hidden_size=256, actor_learning_rate=1e-4, critic_learning_rate=1e-3, gamma=0.99, tau=1e-2, max_memory_size=6000):
         # Params
         self.state_dim  = state_dim
         self.act_dim    = act_dim
+        self.constraint_dim = constraint_dim
         self.num_agents = num_agents
         self.gamma      = gamma
         self.tau        = tau
@@ -56,6 +58,10 @@ class SafeDDPGagent:
                                 self.constraint_net_6]
 
 
+        # Initiallize OSQP solver
+        self.init_osqp()
+
+
         # Networks
         self.actor = Actor(self.state_dim, self.act_dim, self.num_agents)
         self.actor_target = Actor(self.state_dim, self.act_dim, self.num_agents)
@@ -75,6 +81,34 @@ class SafeDDPGagent:
         self.actor_optimizer  = optim.Adam(self.actor.parameters(), lr=actor_learning_rate)
         self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=critic_learning_rate)
 
+
+
+    def init_osqp(self):
+
+        global solver
+
+        # (2) Problem Variables
+        # Problem specific constants
+        I    = np.eye(self.act_dim * self.num_agents)
+        ones = np.ones(self.act_dim * self.num_agents)
+        C    = np.zeros(self.constraint_dim * self.num_agents)
+
+        # Formulate the constraints using neural networks
+        G    = np.zeros([self.act_dim * self.num_agents, self.act_dim * self.num_agents])
+
+        # (2) Problem Variables in QP form
+
+        #q = scipy.sparse.csc_matrix(-actions)
+        q = -np.zeros(self.act_dim * self.num_agents)
+        P = scipy.sparse.eye(self.act_dim * self.num_agents)
+
+        A = scipy.sparse.csc_matrix(np.concatenate([-G, I, -I]))
+        u = np.concatenate([C, ones, ones])
+        l = None
+
+        # (2) Update Solver
+        solver.setup(P, q, A, l, u,verbose=False)
+
     @torch.no_grad()
     def get_action(self, state, constraint):
         state = Variable(torch.from_numpy(state).float().unsqueeze(0))
@@ -88,7 +122,7 @@ class SafeDDPGagent:
         return actions
 
     @torch.no_grad()
-    def correct_actions(self, state, actions, constraint):
+    def correct_actions_old(self, state, actions, constraint):
 
         # QP solution should be here
         x = cvxpy.Variable(self.act_dim * self.num_agents)
@@ -118,9 +152,46 @@ class SafeDDPGagent:
         return x.value
 
     @torch.no_grad()
-    def correct_actions_osqp(self, state, actions, constraint):
+    def correct_actions(self, state, actions, constraint):
 
         # (1) Create solver as a globar variable
+        global solver
+        #ipdb.set_trace()
+
+
+        # (2) Problem Variables
+        # Problem specific constants
+        I    = np.eye(self.act_dim * self.num_agents)
+        ones = np.ones(self.act_dim * self.num_agents)
+        C    = np.concatenate(constraint)
+
+        # Formulate the constraints using neural networks
+        G    = np.zeros([self.act_dim * self.num_agents, self.act_dim * self.num_agents])
+        for i, net in enumerate(self.constraint_nets):
+            G[i, :] = net(state).numpy()
+
+        # (2) Problem Variables in QP form
+        '''
+        q_ = -actions
+        P_ = np.eye(self.act_dim * self.num_agents)
+
+        A_ = np.concatenate([-G, I, -I])
+        u_ = np.concatenate([C - self.col_margin, ones, ones])
+        l = None
+        '''
+
+        #q = scipy.sparse.csc_matrix(-actions)
+        q = -actions
+        P = scipy.sparse.eye(self.act_dim * self.num_agents)
+
+        A = scipy.sparse.csc_matrix(np.concatenate([-G, I, -I]))
+        u = np.concatenate([C - self.col_margin, ones, ones])
+        l = None
+
+        # (2) Update Solver
+        solver.update(q = q, l = l, u = u, Ax = A.data)
+        x = solver.solve()
+        return x.x
 
         # QP solution should be here
         x = cvxpy.Variable(self.act_dim * self.num_agents)

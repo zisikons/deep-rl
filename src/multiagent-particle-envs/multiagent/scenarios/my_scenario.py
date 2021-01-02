@@ -88,8 +88,8 @@ class Scenario(BaseScenario):
         
         rew = -dist - 0.2*action_norm
         
-        if (dist < 0.01):
-            rew += 1
+        if (dist < 0.05):
+            rew += 5
 
         '''
         for i, l in enumerate(world.landmarks):
@@ -106,7 +106,7 @@ class Scenario(BaseScenario):
         if agent.collide:
             for a in world.agents:
                 if self.is_collision(a, agent):
-                    rew -= 1
+                    rew -= 0.2
         return rew
 
     def observation(self, agent, world):

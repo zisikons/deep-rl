@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import operator
 import os,sys
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 import argparse
@@ -47,47 +48,67 @@ def main():
     world = scenario.make_world()
 
     # simulation properties
-    episodes = 1000
+    episodes = 1500
     steps_per_episode = 200
-    size = episodes*steps_per_episode
+    size = episodes*(steps_per_episode - 1)
 
     # Environment Setup
-    env = MultiAgentEnv(world, scenario.reset_world, scenario.reward, scenario.observation, scenario.constraints, info_callback=None, shared_viewer = True)
+    env = MultiAgentEnv(world,
+                        scenario.reset_world,
+                        scenario.reward,
+                        scenario.observation,
+                        scenario.constraints,
+                        info_callback=None,
+                        shared_viewer = True)
+
     state_dim, act_dim, num_agents, constraint_dim = get_env_params(env)
 
     # data storage containers
-    state_buf       = np.zeros([size, state_dim*num_agents])
-    next_state_buf  = np.zeros([size, state_dim*num_agents])
-    actions_buf     = np.zeros([size, act_dim*num_agents])
-    constraints_buf = np.zeros([size, constraint_dim*num_agents])
+    state_buf        = np.zeros([size, state_dim*num_agents])
+    actions_buf      = np.zeros([size, act_dim*num_agents])
+    constraints_diff = np.zeros([size, constraint_dim*num_agents])
 
     agents = env.world.agents
 
     # Simulate the environment and generate data
     for episode in range(episodes):
-        state = env.reset()
+
+        # Episode "Preprocessing"
+        state           = env.reset()
+        constraints_old = np.zeros([constraint_dim*num_agents])
+
         for step in range(steps_per_episode):
 
+            # Simulation
             action = np.random.uniform(low = -1, high = 1,size= num_agents*act_dim)
             action = np.split(action, num_agents)
             next_state, reward, done, constraints, *rest = env.step(action)
 
-            state_buf[episode*steps_per_episode + step,:]       = np.concatenate(state)
-            actions_buf[episode*steps_per_episode + step,:]     = np.concatenate(action)
-            next_state_buf[episode*steps_per_episode + step,:]  = np.concatenate(next_state)
-            constraints_buf[episode*steps_per_episode + step,:] = np.concatenate(constraints)
+            # Omit first simulation step
+            if step == 0:
+                old_constraints = constraints
+                continue
 
+            # Constraint diff 
+            diff            = list(map(operator.sub, constraints, constraints_old))
+            constraints_old = constraints
+
+            # Store stuff to buffers for training
+            idx = episode*(steps_per_episode - 1) + step - 1
+            state_buf[idx,:]        = np.concatenate(state)
+            actions_buf[idx,:]      = np.concatenate(action)
+            constraints_diff[idx,:] = np.concatenate(diff)
 
             # update state
             state = next_state
 
-            if all(done) == True or is_collide(scenario, agents):
-                state = env.reset()
+            #if all(done) == True or is_collide(scenario, agents):
+            #    state = env.reset()
 
-    pd.DataFrame(state_buf).to_csv("D_state.csv")
-    pd.DataFrame(actions_buf).to_csv("D_action.csv")
-    pd.DataFrame(next_state_buf).to_csv("D_next_state.csv") 
-    pd.DataFrame(constraints_buf).to_csv("D_constraints.csv") 
+    pd.DataFrame(state_buf).to_csv("DD_state.csv")
+    pd.DataFrame(actions_buf).to_csv("DD_action.csv")
+    #pd.DataFrame(next_state_buf).to_csv("D_next_state.csv")
+    pd.DataFrame(constraints_diff).to_csv("DD_constraints.csv")
     print("Done... Data saved")
 
 if __name__ == "__main__":

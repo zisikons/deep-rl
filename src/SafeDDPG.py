@@ -11,8 +11,18 @@ import torch.nn as nn
 
 import numpy as np
 import ipdb
+
+
+import cvxpy
+import osqp
+
+
+# Define Solver Globaly
+solver = osqp.OSQP()
+
+
 class SafeDDPGagent:
-     
+
     def __init__(self, state_dim, act_dim, num_agents, col_margin = 0.1 ,hidden_size=256, actor_learning_rate=1e-4, critic_learning_rate=1e-3, gamma=0.99, tau=1e-2, max_memory_size=6000):
         # Params
         self.state_dim  = state_dim
@@ -20,17 +30,38 @@ class SafeDDPGagent:
         self.num_agents = num_agents
         self.gamma      = gamma
         self.tau        = tau
-        self.constraint_net_1 = ConstraintNetwork()
-        self.constraint_net_2 = ConstraintNetwork()
-        self.constraint_net_1.load_state_dict(torch.load("constraint_net_1.pkl"))
-        self.constraint_net_2.load_state_dict(torch.load("constraint_net_2.pkl"))
+        self.col_margin = col_margin
+
+
+        # Import Constraint Networks
+        self.constraint_net_1 = ConstraintNetwork(self.state_dim*self.num_agents, self.act_dim*self.num_agents)
+        self.constraint_net_2 = ConstraintNetwork(self.state_dim*self.num_agents, self.act_dim*self.num_agents)
+        self.constraint_net_3 = ConstraintNetwork(self.state_dim*self.num_agents, self.act_dim*self.num_agents)
+        self.constraint_net_4 = ConstraintNetwork(self.state_dim*self.num_agents, self.act_dim*self.num_agents)
+        self.constraint_net_5 = ConstraintNetwork(self.state_dim*self.num_agents, self.act_dim*self.num_agents)
+        self.constraint_net_6 = ConstraintNetwork(self.state_dim*self.num_agents, self.act_dim*self.num_agents)
+
+        self.constraint_net_1.load_state_dict(torch.load("constraint_net1.pkl"))
+        self.constraint_net_2.load_state_dict(torch.load("constraint_net2.pkl"))
+        self.constraint_net_3.load_state_dict(torch.load("constraint_net3.pkl"))
+        self.constraint_net_4.load_state_dict(torch.load("constraint_net4.pkl"))
+        self.constraint_net_5.load_state_dict(torch.load("constraint_net5.pkl"))
+        self.constraint_net_6.load_state_dict(torch.load("constraint_net6.pkl"))
+
+        self.constraint_nets = [self.constraint_net_1, \
+                                self.constraint_net_2, \
+                                self.constraint_net_3, \
+                                self.constraint_net_4, \
+                                self.constraint_net_5, \
+                                self.constraint_net_6]
+
 
         # Networks
         self.actor = Actor(self.state_dim, self.act_dim, self.num_agents)
         self.actor_target = Actor(self.state_dim, self.act_dim, self.num_agents)
         self.critic = Critic(self.state_dim, self.act_dim, self.num_agents)
         self.critic_target = Critic(self.state_dim, self.act_dim, self.num_agents)
-        
+
         for target_param, param in zip(self.actor_target.parameters(), self.actor.parameters()):
             target_param.data.copy_(param.data)
 
@@ -43,55 +74,90 @@ class SafeDDPGagent:
         self.critic_criterion  = nn.MSELoss(reduction = 'mean')
         self.actor_optimizer  = optim.Adam(self.actor.parameters(), lr=actor_learning_rate)
         self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=critic_learning_rate)
-  
+
     @torch.no_grad()
-    def get_action(self, state):
+    def get_action(self, state, constraint):
         state = Variable(torch.from_numpy(state).float().unsqueeze(0))
-        action = self.actor(state) 
+        action = self.actor(state)
         action = action.detach().numpy().flatten()
-        
-        # transform numpy array into list of 3 actions
-        actions = np.split(action, self.num_agents)
-        actions = correct_actions(state, action)
 
+        # transform numpy array into list of 3 actions
+        actions = self.correct_actions(state, action, constraint)
+
+        actions = np.split(action, self.num_agents)
         return actions
 
     @torch.no_grad()
-    def correct_actions(self, state, actions):
-        
+    def correct_actions(self, state, actions, constraint):
+
         # QP solution should be here
-        
+        x = cvxpy.Variable(self.act_dim * self.num_agents)
 
-        state = np.split(state.numpy(), self.num_agents)
-        
-        for i in range(self.num_agents):
-           # check constraints for agent i
-            
-            const1_net = self.constraint_net_1(state[i])
-            const1     = self.constraint(state, mode = 1)
-            const2_net = self.constraint_net_2(state[i])
-            const2     = self.constraint(state, mode = 2)
-            
-            arg_lambda1 = (np.sum(np.multiply(const1_net, actions[i])) + const1 - self.col_margin)/np.sum(np.multiply(const1_net, const1_net))
-            lambda1 = np.max(0, arg_lambda1)
-            
-            arg_lambda2 = (np.sum(np.multiply(const2_net, actions[i])) + const2 - self.col_margin)/np.sum(np.multiply(const2_net, const2_net))
-            lambda2 = np.max(0, arg_lambda2)
-            
+        # Define the cost function
+        cost_fun = cvxpy.norm(actions - x)**2
 
+        # Define the Constraints
+        # C + g * a < 
+        C = np.concatenate(constraint)
 
-        return actions
-    
+        # Formulate the constraints using neural networks
+        A = np.zeros([self.act_dim * self.num_agents, self.act_dim * self.num_agents])
+
+        for i, net in enumerate(self.constraint_nets):
+            A[i, :] = net(state).numpy()
+
+        # Box constraints
+        I    = np.eye(self.act_dim * self.num_agents)
+        ones = np.ones(self.act_dim * self.num_agents)
+        constr = [-A @ x <= C - self.col_margin, I @ x <= ones, -I @ x <= ones]
+
+        # Define Optimization Problem
+        prob = cvxpy.Problem(cvxpy.Minimize(cost_fun), constr)
+        prob.solve()
+
+        return x.value
+
+    @torch.no_grad()
+    def correct_actions_osqp(self, state, actions, constraint):
+
+        # (1) Create solver as a globar variable
+
+        # QP solution should be here
+        x = cvxpy.Variable(self.act_dim * self.num_agents)
+
+        # Define the cost function
+        cost_fun = cvxpy.norm(actions - x)**2
+
+        # Define the Constraints
+        # C + g * a < 
+        C = np.concatenate(constraint)
+
+        # Formulate the constraints using neural networks
+        A = np.zeros([self.act_dim * self.num_agents, self.act_dim * self.num_agents])
+
+        for i, net in enumerate(self.constraint_nets):
+            A[i, :] = net(state).numpy()
+
+        # Box constraints
+        I    = np.eye(self.act_dim * self.num_agents)
+        ones = np.ones(self.act_dim * self.num_agents)
+        constr = [-A @ x <= C - self.col_margin, I @ x <= ones, -I @ x <= ones]
+
+        # Define Optimization Problem
+        prob = cvxpy.Problem(cvxpy.Minimize(cost_fun), constr)
+        prob.solve()
+
+        return x.value
+
+    '''
     def constraint(self,state, margin = self.col_margin, mode = 1):
         if (mode == 1):
             constraint_val = -np.sum(np.multiply(state[-2:], state[-2:])) - margin**2
         elif (mode == 2):
             constraint_val = -np.sum(np.multiply(state[-4:-2], state[-4:-2])) - margin**2
         return constraint_val
+    '''
 
-
- 
-    
     def get_data(self):
         return self.memory.get()
 

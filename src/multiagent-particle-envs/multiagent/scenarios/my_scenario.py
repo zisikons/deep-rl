@@ -83,12 +83,13 @@ class Scenario(BaseScenario):
         target_pos = world.landmarks[idx].state.p_pos
         agent_pos  = agent.state.p_pos
 
-        dist   = np.linalg.norm(target_pos - agent_pos)
+        dist   = np.linalg.norm(target_pos - agent_pos,1)
         action_norm = np.linalg.norm(action_n[idx])
-
-
-        huber_coeff = 2
-        rew = -huber(huber_coeff,dist) - 0.25 * huber(huber_coeff,action_norm)
+        
+        rew = -dist - 0.2*action_norm
+        
+        if (dist < 0.01):
+            rew += 1
 
         '''
         for i, l in enumerate(world.landmarks):
@@ -100,12 +101,12 @@ class Scenario(BaseScenario):
             # add a penalty on actions for stability
             rew  -= dists[i]
             rew  -= 0.25*np.linalg.norm(action_n[i], 2)
+        '''
 
         if agent.collide:
             for a in world.agents:
                 if self.is_collision(a, agent):
                     rew -= 1
-        '''
         return rew
 
     def observation(self, agent, world):

@@ -16,6 +16,7 @@ from operator import add
 from gym.wrappers.monitoring.video_recorder import VideoRecorder
 
 import ipdb
+import copy
 
 def get_env_params(env):
     ''' Extract the environment parameters '''
@@ -48,7 +49,7 @@ def main():
     world = scenario.make_world()
 
     # simulation properties
-    episodes = 1500
+    episodes = 5000
     steps_per_episode = 200
     size = episodes*(steps_per_episode - 1)
 
@@ -80,13 +81,16 @@ def main():
         for step in range(steps_per_episode):
 
             # Simulation
-            action = np.random.uniform(low = -1, high = 1,size= num_agents*act_dim)
+            action = np.random.uniform(-1, 1, num_agents*act_dim)
             action = np.split(action, num_agents)
-            next_state, reward, done, constraints, *rest = env.step(action)
+
+            action_copy = copy.deepcopy(action)
+
+            next_state, reward, done, constraints, *rest = env.step(action_copy)
 
             # Omit first simulation step
             if step == 0:
-                old_constraints = constraints
+                constraints_old = constraints
                 continue
 
             # Constraint diff 

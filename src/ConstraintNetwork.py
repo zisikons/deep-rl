@@ -1,4 +1,4 @@
-import torch 
+import torch
 import torch.nn as nn
 import torch.functional as F
 import torch.optim as optimizer
@@ -25,13 +25,14 @@ class ConstraintNetwork(nn.Module):
        x = self.layer2(x)
        return x
 
-    def train(self, state, action, constraints_diff, epochs=80, batch_size = 256, split_ratio = 0.10):
+    def train(self, state, action, constraints_diff, epochs=5, batch_size = 256, split_ratio = 0.10):
 
        shuffle_idx = np.arange(state.shape[0])
        np.random.shuffle(shuffle_idx)
        split_idx =  int(state.shape[0]*split_ratio)
        train_idx = shuffle_idx[split_idx:]
        val_idx   = shuffle_idx[0:split_idx:]
+
 
        # Train data
        train_state       = state[train_idx,:]
@@ -99,7 +100,6 @@ def main():
         # Store
         torch.save(net.state_dict(),"constraint_net" + str(i+1) + ".pkl")
 
-    ipdb.set_trace()
 
 
 if __name__ == "__main__":

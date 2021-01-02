@@ -5,6 +5,8 @@ from multiagent.scenario import BaseScenario
 import ipdb
 
 
+from scipy.special import huber
+
 class Scenario(BaseScenario):
     def make_world(self):
         world = World()
@@ -19,7 +21,7 @@ class Scenario(BaseScenario):
             agent.name = 'agent %d' % i
             agent.collide = True
             agent.silent = True
-            agent.size = 0.08 # 0.15
+            agent.size = 0.15 # 0.15
         # add landmarks
         world.landmarks = [Landmark() for i in range(num_landmarks)]
         for i, landmark in enumerate(world.landmarks):
@@ -74,16 +76,36 @@ class Scenario(BaseScenario):
     def reward(self, agent, world, action_n):
         # Agents are rewarded based on minimum agent distance to each landmark, penalized for collisions
         rew = 0
+
+        # Get Agent index
+        idx = int(agent.name.split(' ')[1])
+
+        target_pos = world.landmarks[idx].state.p_pos
+        agent_pos  = agent.state.p_pos
+
+        dist   = np.linalg.norm(target_pos - agent_pos)
+        action_norm = np.linalg.norm(action_n[idx])
+
+
+        huber_coeff = 2
+        rew = -huber(huber_coeff,dist) - 0.25 * huber(huber_coeff,action_norm)
+
+        '''
         for i, l in enumerate(world.landmarks):
             dists = [np.sqrt(np.sum(np.square(a.state.p_pos - l.state.p_pos))) for a in world.agents]
+
+            dists = np.linalg.norm(l.state.p_pos - world.agents[i].state.p_pos)
+
             #rew -= min(dists)
             # add a penalty on actions for stability
             rew  -= dists[i]
             rew  -= 0.25*np.linalg.norm(action_n[i], 2)
+
         if agent.collide:
             for a in world.agents:
                 if self.is_collision(a, agent):
                     rew -= 1
+        '''
         return rew
 
     def observation(self, agent, world):

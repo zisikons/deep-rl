@@ -49,11 +49,11 @@ def main():
 
     # Training Parameters
     batch_size = 128
-    episodes = 2000
+    episodes = 1000
     steps_per_episode = 200
 
 
-    agent = SafeDDPGagent(state_dim = state_dim, act_dim = act_dim, num_agents = num_agents)
+    agent = SafeDDPGagent(state_dim = state_dim, act_dim = act_dim,constraint_dim = constraint_dim, num_agents = num_agents)
     noise = OUNoise(act_dim = act_dim, num_agents = num_agents, act_low = -1, act_high = 1, decay_period = episodes)
 
 
@@ -103,6 +103,9 @@ def main():
         # The environment will set terminal to True if an episode is done.
         terminal = False
         env.reset()
+
+        # Initiallize constraints signal
+        constraint = num_agents * [5*np.ones(constraint_dim)]
         for t in range(episode_length):
             if i <= 10:
                 #rec.capture_frame()
@@ -111,8 +114,8 @@ def main():
                 else:
                     rec.capture_frame()
             # Taking an action in the environment
-            action = agent.get_action(np.concatenate(state))
-            state, reward, terminal,*rest = env.step(action)
+            action = agent.get_action(np.concatenate(state), constraint)
+            state, reward, terminal, constraint,*rest = env.step(action)
             cumulative_return += reward[0]
             if bool(np.prod(terminal)):
                 break

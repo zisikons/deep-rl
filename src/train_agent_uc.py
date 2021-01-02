@@ -47,7 +47,7 @@ def main():
     # Training Parameters
     batch_size = 128
     episodes = 2000
-    steps_per_episode = 200
+    steps_per_episode = 500
 
 
     agent = DDPGagent(state_dim = state_dim, act_dim = act_dim, num_agents = num_agents)
@@ -66,7 +66,7 @@ def main():
             action = noise.get_action(action, step, episode)
             action = np.split(action, num_agents)
             next_state, reward, done, constraint, *rest = env.step(action)
-            ipdb.set_trace()
+            #ipdb.set_trace()
             agent.memory.store(np.concatenate(state), np.concatenate(action), reward[0], np.concatenate(next_state))
 
             state = next_state

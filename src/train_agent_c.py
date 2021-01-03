@@ -51,7 +51,7 @@ def main():
 
     # Training Parameters
     batch_size = 128
-    episodes = 3000
+    episodes = 150
     steps_per_episode = 200
 
 
@@ -63,6 +63,7 @@ def main():
     for episode in range(episodes):
         state = env.reset()
         episode_reward = 0
+        agent.reset_metrics()
 
         constraint = num_agents * [5*np.ones(constraint_dim)]
         for step in range(steps_per_episode):
@@ -89,20 +90,23 @@ def main():
             data = agent.get_data()
             for _ in range(200):
                 agent.update(data, batch_size)
-        rewards.append(episode_reward) 
-    
+
+        rewards.append(episode_reward)
+        print("Interventions =" + str(agent.get_interventions()))
+        print("Problem Infeasible =" + str(agent.get_infeasible()))
+
     # plot the reward over episodes
     plt.plot(rewards)
     plt.show()
     plt.savefig('constrianed_reward.png')
- 
+
     # evaluating the agent's performace after training 
     rec = VideoRecorder(env, "policy.mp4")
     episode_length = 200
     n_eval = 10
     returns = []
     print("Evaluating agent...")
-    
+
     #ipdb.set_trace()
     for i in range(n_eval):
         print(f"Testing policy: episode {i+1}/{n_eval}")

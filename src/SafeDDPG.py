@@ -18,13 +18,19 @@ import osqp
 import scipy
 from scipy import sparse
 
+from qpsolvers import solve_qp
 
 # Define Solver Globaly
 solver = osqp.OSQP()
+solver_interventions = 0
+
+def get_interventions():
+    global solver_interventions
+    return solver_interventions
 
 class SafeDDPGagent:
 
-    def __init__(self, state_dim, act_dim, constraint_dim, num_agents, col_margin = 0.8 ,hidden_size=256, actor_learning_rate=1e-4, critic_learning_rate=1e-3, gamma=0.99, tau=1e-2, max_memory_size=6000):
+    def __init__(self, state_dim, act_dim, constraint_dim, num_agents, col_margin = 0.5 ,hidden_size=256, actor_learning_rate=1e-4, critic_learning_rate=1e-3, gamma=0.99, tau=1e-2, max_memory_size=6000):
         # Params
         self.state_dim  = state_dim
         self.act_dim    = act_dim
@@ -33,6 +39,11 @@ class SafeDDPGagent:
         self.gamma      = gamma
         self.tau        = tau
         self.col_margin = col_margin
+
+        # Define Solver Globaly
+        self.solver = osqp.OSQP()
+        self.solver_interventions = 0
+        self.solver_infeasible    = 0
 
 
         # Import Constraint Networks
@@ -60,7 +71,12 @@ class SafeDDPGagent:
 
         # Initiallize OSQP solver
         self.init_osqp()
+        self.reset_metrics()
 
+
+        # Choose Solver
+        #self.correct_actions = self.correct_actions_cvxpy
+        self.correct_actions = self.correct_actions_osqp
 
         # Networks
         self.actor = Actor(self.state_dim, self.act_dim, self.num_agents)
@@ -82,10 +98,17 @@ class SafeDDPGagent:
         self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=critic_learning_rate)
 
 
+    def reset_metrics(self):
+        self.solver_interventions = 0
+        self.solver_infeasible    = 0
+
+    def get_interventions(self):
+        return self.solver_interventions
+
+    def get_infeasible(self):
+        return self.solver_infeasible
 
     def init_osqp(self):
-
-        global solver
 
         # (2) Problem Variables
         # Problem specific constants
@@ -107,7 +130,7 @@ class SafeDDPGagent:
         l = None
 
         # (2) Update Solver
-        solver.setup(P, q, A, l, u,verbose=False)
+        self.solver.setup(P, q, A, l, u,verbose=False, eps_prim_inf = 1e-04)
 
     @torch.no_grad()
     def get_action(self, state, constraint):
@@ -116,13 +139,29 @@ class SafeDDPGagent:
         action = action.detach().numpy().flatten()
 
         # transform numpy array into list of 3 actions
-        actions = self.correct_actions(state, action, constraint)
+        action_qprog = self.correct_actions_quadprog(state, action, constraint)
+        #action_cvx = self.correct_actions_cvxpy(state, action, constraint)
+        #action_osqp = self.correct_actions_osqp(state, action, constraint)
+
+        #if np.linalg.norm(action_cvx - action_qprog) > 0.2:
+        #    ipdb.set_trace()
+
+        action = action_qprog
 
         actions = np.split(action, self.num_agents)
         return actions
 
+    def predict_constraints(self, state):
+        # Formulate the constraints using neural networks
+        A = np.zeros([self.act_dim * self.num_agents, self.act_dim * self.num_agents])
+
+        for i, net in enumerate(self.constraint_nets):
+            A[i, :] = net(state).numpy()
+
+        return A
+
     @torch.no_grad()
-    def correct_actions_old(self, state, actions, constraint):
+    def correct_actions_cvxpy(self, state, actions, constraint):
 
         # QP solution should be here
         x = cvxpy.Variable(self.act_dim * self.num_agents)
@@ -149,13 +188,20 @@ class SafeDDPGagent:
         prob = cvxpy.Problem(cvxpy.Minimize(cost_fun), constr)
         prob.solve()
 
+        if prob.status == 'infeasible' or prob.status == 'infeasible_inaccurate':
+            self.solver_infeasible += 1
+            #print('cvxpy infeasible')
+            return actions
+
+        if np.linalg.norm(x.value - actions) >1e-3:
+            self.solver_interventions +=1
+
         return x.value
 
     @torch.no_grad()
-    def correct_actions(self, state, actions, constraint):
+    def correct_actions_osqp(self, state, actions, constraint):
 
         # (1) Create solver as a globar variable
-        global solver
         #ipdb.set_trace()
 
 
@@ -186,39 +232,75 @@ class SafeDDPGagent:
 
         A = scipy.sparse.csc_matrix(np.concatenate([-G, I, -I]))
         u = np.concatenate([C - self.col_margin, ones, ones])
+
         l = None
 
         # (2) Update Solver
-        solver.update(q = q, l = l, u = u, Ax = A.data)
-        x = solver.solve()
+        self.solver.update(q = q, l = l, u = u, Ax = A.data)
+        x = self.solver.solve()
+
+        if any(x.x == None):
+            # print("Houston, we have problem")
+            self.solver_infeasible +=1
+            #print('OSQP infeasible')
+            return actions
+
+        if np.linalg.norm(actions - x.x) > 1e-3:
+            self.solver_interventions += 1
+
         return x.x
 
-        # QP solution should be here
-        x = cvxpy.Variable(self.act_dim * self.num_agents)
+    @torch.no_grad()
+    def correct_actions_quadprog(self, state, actions, constraint):
 
-        # Define the cost function
-        cost_fun = cvxpy.norm(actions - x)**2
+        # (1) Create solver as a globar variable
+        #ipdb.set_trace()
 
-        # Define the Constraints
-        # C + g * a < 
-        C = np.concatenate(constraint)
 
-        # Formulate the constraints using neural networks
-        A = np.zeros([self.act_dim * self.num_agents, self.act_dim * self.num_agents])
-
-        for i, net in enumerate(self.constraint_nets):
-            A[i, :] = net(state).numpy()
-
-        # Box constraints
+        # (2) Problem Variables
+        # Problem specific constants
         I    = np.eye(self.act_dim * self.num_agents)
         ones = np.ones(self.act_dim * self.num_agents)
-        constr = [-A @ x <= C - self.col_margin, I @ x <= ones, -I @ x <= ones]
+        C    = np.concatenate(constraint)
 
-        # Define Optimization Problem
-        prob = cvxpy.Problem(cvxpy.Minimize(cost_fun), constr)
-        prob.solve()
+        # Formulate the constraints using neural networks
+        G    = np.zeros([self.act_dim * self.num_agents, self.act_dim * self.num_agents])
+        for i, net in enumerate(self.constraint_nets):
+            G[i, :] = net(state).numpy()
 
-        return x.value
+        # (2) Problem Variables in QP form
+        '''
+        q_ = -actions
+        P_ = np.eye(self.act_dim * self.num_agents)
+
+        A_ = np.concatenate([-G, I, -I])
+        u_ = np.concatenate([C - self.col_margin, ones, ones])
+        l = None
+        '''
+
+        #q = scipy.sparse.csc_matrix(-actions)
+        q = -actions
+        P = np.eye(self.act_dim * self.num_agents)
+
+        A = np.concatenate([-G, I, -I])
+        ub = np.concatenate([C - self.col_margin, ones, ones])
+
+        lb = None
+
+        try:
+            x = solve_qp(P.astype(np.float64), q.astype(np.float64), A.astype(np.float64), ub.astype(np.float64), None, None, None, None)
+
+        except:
+            # print("Houston, we have problem")
+            self.solver_infeasible +=1
+            #print('QUADPROG infeasible')
+            #ipdb.set_trace()
+            return actions
+
+        if np.linalg.norm(actions - x) > 1e-3:
+            self.solver_interventions += 1
+
+        return x
 
     '''
     def constraint(self,state, margin = self.col_margin, mode = 1):

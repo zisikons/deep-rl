@@ -111,7 +111,6 @@ def main():
 
     pd.DataFrame(state_buf).to_csv("DD_state.csv")
     pd.DataFrame(actions_buf).to_csv("DD_action.csv")
-    #pd.DataFrame(next_state_buf).to_csv("D_next_state.csv")
     pd.DataFrame(constraints_diff).to_csv("DD_constraints.csv")
     print("Done... Data saved")
 

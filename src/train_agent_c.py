@@ -10,7 +10,9 @@ import multiagent.scenarios as scenarios
 from SafeDDPG import SafeDDPGagent
 from Noise import OUNoise
 from gym.wrappers.monitoring.video_recorder import VideoRecorder
+import copy
 
+import matplotlib.pyplot as plt
 import ipdb
 
 def get_env_params(env):
@@ -49,7 +51,7 @@ def main():
 
     # Training Parameters
     batch_size = 128
-    episodes = 1000
+    episodes = 3000
     steps_per_episode = 200
 
 
@@ -69,7 +71,8 @@ def main():
             action = np.concatenate(action)
             action = noise.get_action(action, step, episode)
             action = np.split(action, num_agents)
-            next_state, reward, done, constraint, *rest = env.step(action)
+            action_copy = copy.deepcopy(action)
+            next_state, reward, done, constraint, *rest = env.step(action_copy)
 
             agent.memory.store(np.concatenate(state), np.concatenate(action), reward[0], np.concatenate(next_state))
 
@@ -87,7 +90,12 @@ def main():
             for _ in range(200):
                 agent.update(data, batch_size)
         rewards.append(episode_reward) 
-            
+    
+    # plot the reward over episodes
+    plt.plot(rewards)
+    plt.show()
+    plt.savefig('constrianed_reward.png')
+ 
     # evaluating the agent's performace after training 
     rec = VideoRecorder(env, "policy.mp4")
     episode_length = 200

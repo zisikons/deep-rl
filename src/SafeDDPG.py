@@ -24,7 +24,7 @@ solver = osqp.OSQP()
 
 class SafeDDPGagent:
 
-    def __init__(self, state_dim, act_dim, constraint_dim, num_agents, col_margin = 0.5 ,hidden_size=256, actor_learning_rate=1e-4, critic_learning_rate=1e-3, gamma=0.99, tau=1e-2, max_memory_size=6000):
+    def __init__(self, state_dim, act_dim, constraint_dim, num_agents, col_margin = 0.8 ,hidden_size=256, actor_learning_rate=1e-4, critic_learning_rate=1e-3, gamma=0.99, tau=1e-2, max_memory_size=6000):
         # Params
         self.state_dim  = state_dim
         self.act_dim    = act_dim

@@ -88,7 +88,7 @@ class Scenario(BaseScenario):
         
         rew = -dist - 0.2*action_norm
         
-        if (dist < 0.05):
+        if (dist < 0.01):
             rew += 5
 
         '''
@@ -137,10 +137,8 @@ class Scenario(BaseScenario):
         for i, other in enumerate(other_agents):
             collision_signals[i] = np.linalg.norm(other.state.p_pos - agent.state.p_pos)**2
 
-
         # Constraint Type 2: Obstacles
         # TODO
-
         return collision_signals
 
 

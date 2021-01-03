@@ -11,6 +11,9 @@ from DDPG import DDPGagent
 from Noise import OUNoise
 from gym.wrappers.monitoring.video_recorder import VideoRecorder
 
+import copy
+
+import matplotlib.pyplot as plt
 import ipdb
 
 def get_env_params(env):
@@ -46,8 +49,8 @@ def main():
 
     # Training Parameters
     batch_size = 128
-    episodes = 2000
-    steps_per_episode = 500
+    episodes = 3000
+    steps_per_episode = 200
 
 
     agent = DDPGagent(state_dim = state_dim, act_dim = act_dim, num_agents = num_agents)
@@ -65,8 +68,8 @@ def main():
             action = np.concatenate(action)
             action = noise.get_action(action, step, episode)
             action = np.split(action, num_agents)
-            next_state, reward, done, constraint, *rest = env.step(action)
-            #ipdb.set_trace()
+            action_copy = copy.deepcopy(action) # list is mutable
+            next_state, reward, done, constraint, *rest = env.step(action_copy)
             agent.memory.store(np.concatenate(state), np.concatenate(action), reward[0], np.concatenate(next_state))
 
             state = next_state
@@ -80,10 +83,15 @@ def main():
         if (agent.memory.ptr == agent.memory.max_size):
             print("updating agent ...")
             data = agent.get_data()
-            for _ in range(200):
+            for _ in range(500):
                 agent.update(data, batch_size)
         rewards.append(episode_reward) 
-            
+    
+    # plot the reward over episodes
+    plt.plot(rewards)
+    plt.show()
+    plt.savefig('unconstrained_reward.png') 
+    
     # evaluating the agent's performace after training 
     rec = VideoRecorder(env, "policy.mp4")
     episode_length = 200

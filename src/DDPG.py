@@ -12,7 +12,7 @@ import numpy as np
 import ipdb
 class DDPGagent:
      
-    def __init__(self, state_dim, act_dim, num_agents ,hidden_size=256, actor_learning_rate=1e-4, critic_learning_rate=1e-3, gamma=0.99, tau=1e-2, max_memory_size=6000):
+    def __init__(self, state_dim, act_dim, num_agents ,hidden_size=256, actor_learning_rate=1e-4, critic_learning_rate=1e-3, gamma=0.99, tau=1e-2, max_memory_size=16000):
         # Params
         self.state_dim  = state_dim
         self.act_dim    = act_dim

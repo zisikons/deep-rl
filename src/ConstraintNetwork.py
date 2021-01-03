@@ -7,7 +7,7 @@ import numpy as np
 import ipdb
 
 class ConstraintNetwork(nn.Module):
-    def __init__(self, state_dim, act_dim, hidden_size = 10, lr = 3e-5):
+    def __init__(self, state_dim, act_dim, hidden_size = 10, lr = 5e-4):
         super(ConstraintNetwork, self).__init__()
         self.layer1 = nn.Linear(state_dim, hidden_size)
         self.layer2 = nn.Linear(hidden_size, act_dim)
@@ -25,7 +25,7 @@ class ConstraintNetwork(nn.Module):
        x = self.layer2(x)
        return x
 
-    def train(self, state, action, constraints_diff, epochs=5, batch_size = 256, split_ratio = 0.10):
+    def train(self, state, action, constraints_diff, epochs=80, batch_size = 256, split_ratio = 0.10):
 
        shuffle_idx = np.arange(state.shape[0])
        np.random.shuffle(shuffle_idx)

@@ -5,7 +5,7 @@ import numpy as np
 
 
 class Actor(nn.Module):
-    def __init__(self, state_dim=12, act_dim=2, num_agents=3, hidden_size = [128, 64]):
+    def __init__(self, state_dim=12, act_dim=2, num_agents=3, hidden_size = [100, 100]):
         super(Actor, self).__init__()
         input_size  = num_agents*state_dim
         output_size = num_agents*act_dim  

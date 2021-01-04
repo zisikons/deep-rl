@@ -1,0 +1,3 @@
+[submodule "src/multiagent-particle-envs"]
+	path = src/multiagent-particle-envs
+	url = https://github.com/zisikons/multiagent-particle-envs

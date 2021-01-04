@@ -20,6 +20,9 @@ from scipy import sparse
 
 from qpsolvers import solve_qp
 
+import scipy as sp
+import scipy.linalg
+
 # Define Solver Globaly
 solver = osqp.OSQP()
 solver_interventions = 0
@@ -30,7 +33,7 @@ def get_interventions():
 
 class SafeDDPGagent:
 
-    def __init__(self, state_dim, act_dim, constraint_dim, num_agents, col_margin = 0.5 ,hidden_size=256, actor_learning_rate=1e-4, critic_learning_rate=1e-3, gamma=0.99, tau=1e-2, max_memory_size=6000):
+    def __init__(self, state_dim, act_dim, constraint_dim, num_agents, col_margin = 0.35 ,hidden_size=256, actor_learning_rate=1e-4, critic_learning_rate=1e-3, gamma=0.99, tau=1e-2, max_memory_size=6000):
         # Params
         self.state_dim  = state_dim
         self.act_dim    = act_dim
@@ -139,7 +142,7 @@ class SafeDDPGagent:
         action = action.detach().numpy().flatten()
 
         # transform numpy array into list of 3 actions
-        action_qprog = self.correct_actions_quadprog(state, action, constraint)
+        action_qprog = self.correct_actions_soften(state, action, constraint)
         #action_cvx = self.correct_actions_cvxpy(state, action, constraint)
         #action_osqp = self.correct_actions_osqp(state, action, constraint)
 
@@ -302,6 +305,53 @@ class SafeDDPGagent:
 
         return x
 
+    def correct_actions_soften(self, state, actions, constraint):
+
+        # (1) Create solver as a globar variable
+        #ipdb.set_trace()
+        l1_penalty = 1000
+
+        # (2) Problem Variables
+        # Problem specific constants
+        I     = np.eye(self.act_dim * self.num_agents)
+        Z     = np.zeros([self.act_dim * self.num_agents,self.act_dim * self.num_agents])
+        ones  = np.ones(self.act_dim * self.num_agents)
+        zeros = np.zeros(self.act_dim * self.num_agents)
+        C     = np.concatenate(constraint) - self.col_margin
+
+        # Formulate the constraints using neural networks
+        G    = np.zeros([self.act_dim * self.num_agents, self.act_dim * self.num_agents])
+        for i, net in enumerate(self.constraint_nets):
+            G[i, :] = net(state).numpy()
+
+        # (2) Problem Variables in QP form
+        P = sp.linalg.block_diag(I, Z + I * 0.001, Z + I * 0.001)
+        q = np.concatenate([-actions, ones, zeros])
+
+        A = np.vstack((np.concatenate([-G, Z, -I], axis = 1),
+                       np.concatenate([Z, Z, -I], axis = 1),
+                       np.concatenate([Z, -I,  l1_penalty * I], axis = 1),
+                       np.concatenate([Z, -I, -l1_penalty * I], axis = 1)))
+
+        ub = np.concatenate((C, zeros, zeros, zeros))
+        lb = None
+
+        try:
+            x = solve_qp(P.astype(np.float64), q.astype(np.float64), A.astype(np.float64), ub.astype(np.float64), None, None, None, None)
+
+        except:
+            # print("Houston, we have problem")
+            self.solver_infeasible +=1
+            #print('QUADPROG infeasible')
+            #ipdb.set_trace()
+            return actions
+
+        x = x[0:(self.act_dim * self.num_agents)]
+
+        if np.linalg.norm(actions - x) > 1e-3:
+            self.solver_interventions += 1
+
+        return x
     '''
     def constraint(self,state, margin = self.col_margin, mode = 1):
         if (mode == 1):

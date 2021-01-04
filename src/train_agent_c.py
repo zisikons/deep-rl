@@ -51,19 +51,27 @@ def main():
 
     # Training Parameters
     batch_size = 128
-    episodes = 150
-    steps_per_episode = 200
+    episodes = 30000
+    steps_per_episode = 300
 
 
     agent = SafeDDPGagent(state_dim = state_dim, act_dim = act_dim,constraint_dim = constraint_dim, num_agents = num_agents)
     noise = OUNoise(act_dim = act_dim, num_agents = num_agents, act_low = -1, act_high = 1, decay_period = episodes)
 
 
+    # Counters
     rewards = []
+
+    collisions = []
+    total_collisions = 0
+
+    # Simulation
     for episode in range(episodes):
         state = env.reset()
         episode_reward = 0
         agent.reset_metrics()
+
+        episode_collisions = 0
 
         constraint = num_agents * [5*np.ones(constraint_dim)]
         for step in range(steps_per_episode):
@@ -77,13 +85,21 @@ def main():
 
             agent.memory.store(np.concatenate(state), np.concatenate(action), reward[0], np.concatenate(next_state))
 
+
+            for i in range(len(env.world.agents)):
+                for j in range(i + 1, len(env.world.agents), 1):
+                    if scenario.is_collision(env.world.agents[i],env.world.agents[j]):
+                        episode_collisions += 1
+
+
             state = next_state
             episode_reward += reward[0]
+
             if all(done) == True:
                 print(f"Episode: {episode+1}/{episodes}, episode reward {episode_reward}, exploration {noise.sigma}")
                 break
             elif step == steps_per_episode-1:
-                print(f"Episode: {episode+1}/{episodes}, episode reward {episode_reward}")
+                print(f"Episode: {episode+1}/{episodes}, episode reward {episode_reward}, collisions {episode_collisions}")
 
         if (agent.memory.ptr == agent.memory.max_size):
             print("updating agent ...")
@@ -91,7 +107,10 @@ def main():
             for _ in range(200):
                 agent.update(data, batch_size)
 
+        total_collisions += episode_collisions
         rewards.append(episode_reward)
+        collisions.append(total_collisions)
+
         print("Interventions =" + str(agent.get_interventions()))
         print("Problem Infeasible =" + str(agent.get_infeasible()))
 
@@ -99,6 +118,10 @@ def main():
     plt.plot(rewards)
     plt.show()
     plt.savefig('constrianed_reward.png')
+
+    plt.plot(collisions)
+    plt.show()
+    plt.savefig('constrianed_collisions.png')
 
     # evaluating the agent's performace after training 
     rec = VideoRecorder(env, "policy.mp4")

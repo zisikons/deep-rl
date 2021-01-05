@@ -110,7 +110,7 @@ def main():
     output_dir   = abs_path + '../data/constraint_networks/'
 
     # Training Settings
-    EPOCHS = 1
+    EPOCHS = 20
     BATCH_SIZE = 256
     VAL_RATIO = 0.1
 

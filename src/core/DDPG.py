@@ -172,6 +172,7 @@ class DDPGagent:
         return actions
 
 
+    # redundant
     def get_data(self):
         return self.memory.get()
 

@@ -126,7 +126,6 @@ def main():
         state = env.reset()
         cumulative_return = 0
         # The environment will set terminal to True if an episode is done.
-        terminal = False
         env.reset()
         for t in range(episode_length):
             if i <= 10:
@@ -138,7 +137,7 @@ def main():
             action = agent.get_action(np.concatenate(state))
             state, reward, done,*rest = env.step(action)
             cumulative_return += reward[0]
-            if all(terminal):
+            if all(done):
                 break
         returns.append(cumulative_return)
         print(f"Achieved {cumulative_return:.2f} return.")

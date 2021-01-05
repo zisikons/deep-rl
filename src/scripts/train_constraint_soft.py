@@ -59,7 +59,7 @@ def main():
 
     # Training Parameters
     batch_size = 128
-    episodes   = 10000
+    episodes   = 8000
     steps_per_episode = 300
     soften = True
 

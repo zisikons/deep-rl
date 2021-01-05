@@ -2,7 +2,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-import ipdb
 
 def main():
     # Usefull Directories
@@ -16,39 +15,21 @@ def main():
     true_run = True
     N = 8000
 
-    # Experiment Directories
-    if true_run:
-        safe_ddpg_soft = abs_path + '../data/agents/SafeDDPG_soft/'
-        safe_ddpg_hard = abs_path + '../data/agents/SafeDDPG_hard/'
-        ddpg_vanilla   = abs_path + '../data/agents/DDPG/'
+    safe_ddpg_soft = abs_path + '../data/agents/SafeDDPG_soft/'
+    safe_ddpg_hard = abs_path + '../data/agents/SafeDDPG_hard/'
+    ddpg_vanilla   = abs_path + '../data/agents/DDPG/'
 
-        # Import Results
-        reward_soft = np.load(safe_ddpg_soft + 'rewards.npy')[0:N]
-        reward_hard = np.load(safe_ddpg_hard + 'rewards.npy')[0:N]
-        reward_ddpg = np.load(ddpg_vanilla + 'rewards.npy')[0:N]
+    # Import Results
+    reward_soft = np.load(safe_ddpg_soft + 'rewards.npy')[0:N]
+    reward_hard = np.load(safe_ddpg_hard + 'rewards.npy')[0:N]
+    reward_ddpg = np.load(ddpg_vanilla + 'rewards.npy')[0:N]
 
-        collisions_soft = np.load(safe_ddpg_soft + 'collisions.npy')[0:N]
-        collisions_hard = np.load(safe_ddpg_hard + 'collisions.npy')[0:N]
-        collisions_ddpg = np.load(ddpg_vanilla + 'collisions.npy')[0:N]
+    collisions_soft = np.load(safe_ddpg_soft + 'collisions.npy')[0:N]
+    collisions_hard = np.load(safe_ddpg_hard + 'collisions.npy')[0:N]
+    collisions_ddpg = np.load(ddpg_vanilla + 'collisions.npy')[0:N]
 
-        infeasibilities_soft = np.load(safe_ddpg_soft + 'infeasible.npy')[0:N]
-        infeasibilities_hard = np.load(safe_ddpg_hard + 'infeasible.npy')[0:N]
-    else:
-        safe_ddpg_soft = '../data/test/'
-        safe_ddpg_hard = '../data/test/'
-        ddpg_vanilla   = '../data/test/'
-
-        # Import Results
-        reward_soft = np.load(safe_ddpg_soft + 'rewards_soft.npy')[0:N]
-        reward_hard = np.load(safe_ddpg_hard + 'rewards_hard.npy')[0:N]
-        reward_ddpg = np.load(ddpg_vanilla + 'rewards_ddpg.npy')[0:N]
-
-        collisions_soft = np.load(safe_ddpg_soft + 'collisions_soft.npy')[0:N]
-        collisions_hard = np.load(safe_ddpg_hard + 'collisions_hard.npy')[0:N]
-        collisions_ddpg = np.load(ddpg_vanilla + 'collisions_ddpg.npy')[0:N]
-
-        infeasibilities_soft = np.load(safe_ddpg_soft + 'infeasible_soft.npy')[0:N]
-        infeasibilities_hard = np.load(safe_ddpg_hard + 'infeasible_hard.npy')[0:N]
+    infeasibilities_soft = np.load(safe_ddpg_soft + 'infeasible.npy')[0:N]
+    infeasibilities_hard = np.load(safe_ddpg_hard + 'infeasible.npy')[0:N]
 
     # Plot Type 1: Rewards
     reward_fig = plt.figure()

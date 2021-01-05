@@ -3,7 +3,6 @@ import operator
 import os,sys
 import numpy as np
 import pandas as pd
-import ipdb
 import copy
 #sys.path.insert(1, os.path.join(sys.path[0], '..'))
 #import argparse
@@ -11,11 +10,6 @@ import copy
 from multiagent.environment import MultiAgentEnv
 from multiagent.policy import InteractivePolicy
 import multiagent.scenarios as scenarios
-
-import numpy as np
-import pandas as pd
-import ipdb
-import copy
 
 def get_env_params(env):
     ''' Extract the environment parameters '''

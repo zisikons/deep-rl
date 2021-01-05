@@ -17,7 +17,7 @@ def combined_shape(length, shape=None):
         return (length,)
     return (length, shape) if np.isscalar(shape) else (length, *shape)
 
-class ReplayBuffer:
+class ReplayBufferOld:
     """
     Buffer to store trajectories.
     """
@@ -47,15 +47,62 @@ class ReplayBuffer:
 
     def get(self):
         """
-        Call after an epoch ends. Resets pointers and returns the buffer contents.
+        Call when the agent is to be updated.
         """
         # Buffer has to be full before you can get something from it.
-        assert self.ptr == self.max_size
-        self.ptr =  0
         data = dict(state= self.state_buf, act=self.act_buf,
                     rew=self.rew_buf, next_state =self.next_state_buf)
+        return {k: torch.as_tensor(v, dtype=torch.float32) for k,v in data.items()}
+
+class ReplayBuffer:
+    """
+    Buffer to store trajectories.
+    """
+    def __init__(self, state_dim, act_dim, num_agents, size):
+
+        self.state_buf      = list()
+        self.act_buf        = list()
+        self.rew_buf        = list()
+        self.next_state_buf = list()
+        self.ptr, self.max_size = 0, size
+
+    def store(self, state, act, rew, next_state):
+        """
+        Append a single timestep to the buffer. This is called at each environment
+        update to store the outcome observed outcome.
+        """
+        # buffer has to have room so you can store
+        if self.ptr == self.max_size:
+            self.state_buf.pop(0)
+            self.act_buf.pop(0)
+            self.rew_buf.pop(0)
+            self.next_state_buf.pop(0)
+            self.ptr -= 1
+
+        self.state_buf.append(np.expand_dims(state, axis = 0))
+        self.act_buf.append(np.expand_dims(act, axis = 0))
+        self.rew_buf.append(np.array(rew, ndmin = 1))
+        self.next_state_buf.append(np.expand_dims(next_state, axis = 0))
+        self.ptr += 1
+
+    def get(self):
+        """
+        Call after an epoch ends. Resets pointers and returns the buffer contents.
+        """
+        data = dict(state= np.concatenate(self.state_buf), act=np.concatenate(self.act_buf),
+                    rew=np.concatenate(self.rew_buf), next_state = np.concatenate(self.next_state_buf))
 
         return {k: torch.as_tensor(v, dtype=torch.float32) for k,v in data.items()}
+
+
+
+
+
+
+
+
+
+
 
 class Critic(nn.Module):
     """

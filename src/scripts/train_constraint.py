@@ -59,8 +59,8 @@ def main():
 
     # Training Parameters
     batch_size = 128
-    episodes   = 2000
-    steps_per_episode = 200
+    episodes   = 10000
+    steps_per_episode = 300
     soften = True
 
     # Define Agent
@@ -139,7 +139,7 @@ def main():
 
     # evaluating the agent's performace after training 
     rec = VideoRecorder(env, output_dir +  "policy.mp4")
-    episode_length = 200
+    episode_length = steps_per_episode
     n_eval = 10
     returns = []
     print("Evaluating agent...")

@@ -1,9 +1,3 @@
-"""
-from Actor import Actor
-from Critic import Critic
-import ReplayBuffer
-from ConstraintNetwork import ConstraintNetwork
-"""
 import torch
 import torch.autograd
 from torch.autograd import Variable
@@ -11,27 +5,18 @@ import torch.optim as optim
 import torch.nn as nn
 
 import numpy as np
-import ipdb
-
-
-import cvxpy
-import osqp
-import scipy
-from scipy import sparse
+import scipy as sp
 
 from qpsolvers import solve_qp
 
-import scipy as sp
-import scipy.linalg
-
 from core.DDPG import DDPGagent
-
 from core.constraint_network import ConstraintNetwork
+
 
 class SafeDDPGagent(DDPGagent):
     def __init__(self, state_dim, act_dim, constraint_dim, num_agents, constraint_networks_dir, col_margin = 0.35 ,
             hidden_size=256, actor_learning_rate=1e-4, critic_learning_rate=1e-3,
-            gamma=0.99, tau=1e-2, max_memory_size=6000,  soften = True):
+            gamma=0.99, tau=1e-2, max_memory_size=16000,  soften = True):
 
         # Call DDPGagent's constructor
         super().__init__(state_dim, act_dim, num_agents ,hidden_size,
@@ -46,15 +31,13 @@ class SafeDDPGagent(DDPGagent):
         self.total_constraint_dim = self.constraint_dim * self.num_agents
         self.total_action_dim = self.act_dim * self.num_agents
 
+        self.constraint_nets = self.total_constraint_dim*[None]
+        
         # Initialize constraint networks
-        self.constraint_nets = self.total_constraint_dim * \
-                             [ConstraintNetwork(self.total_state_dim, self.total_action_dim)]
-
-        for i, net in enumerate(self.constraint_nets):
-
-            #net = ConstraintNetwork(self.total_constraint_dim, self.total_action_dim)
-            net.load_state_dict(torch.load(constraint_networks_dir
-                                           + "constraint_net_" + str(i) + ".pkl"))
+        for i in range(self.total_constraint_dim):
+            self.constraint_nets[i] = ConstraintNetwork(self.total_state_dim, self.total_action_dim)
+            self.constraint_nets[i].load_state_dict(torch.load(constraint_networks_dir
+                                                    + "constraint_net_" + str(i) + ".pkl"))
 
         # Define Solver Globaly
         self.solver_interventions = 0
@@ -127,11 +110,12 @@ class SafeDDPGagent(DDPGagent):
 
         return x
 
+    @torch.no_grad()
     def correct_actions_soften(self, state, actions, constraint):
 
         # (1) Create solver as a globar variable
         l1_penalty = 1000
-
+        
         # (2) Problem Variables
         # Problem specific constants
         I     = np.eye(self.total_action_dim)

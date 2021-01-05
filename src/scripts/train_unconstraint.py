@@ -124,7 +124,6 @@ def main():
         print(f"Testing policy: episode {i+1}/{n_eval}")
         state = env.reset()
         cumulative_return = 0
-        # The environment will set terminal to True if an episode is done.
         env.reset()
         for t in range(episode_length):
             if i <= 10:
@@ -136,6 +135,10 @@ def main():
             action = agent.get_action(np.concatenate(state))
             next_state, reward,done ,_ , constraint = env.step(action_copy)
             cumulative_return += reward[0]
+            
+            # update state 
+            state = next_state
+
             if all(done) == True:
                 break
         returns.append(cumulative_return)

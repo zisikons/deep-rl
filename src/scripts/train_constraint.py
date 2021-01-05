@@ -152,7 +152,6 @@ def main():
         # The environment will set terminal to True if an episode is done.
         env.reset()
         constraint = num_agents * [5*np.ones(constraint_dim)]
-
         for t in range(episode_length):
             if i <= 10:
                 #rec.capture_frame()
@@ -166,6 +165,8 @@ def main():
             cumulative_return += reward[0]
             if any(done):
                 break
+            # update state 
+            state = next_state
         returns.append(cumulative_return)
         print(f"Achieved {cumulative_return:.2f} return.")
         if i == 10:

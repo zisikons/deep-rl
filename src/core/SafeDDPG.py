@@ -6,6 +6,7 @@ import torch.nn as nn
 
 import numpy as np
 import scipy as sp
+import scipy.linalg
 
 from qpsolvers import solve_qp
 
@@ -32,7 +33,7 @@ class SafeDDPGagent(DDPGagent):
         self.total_action_dim = self.act_dim * self.num_agents
 
         self.constraint_nets = self.total_constraint_dim*[None]
-        
+
         # Initialize constraint networks
         for i in range(self.total_constraint_dim):
             self.constraint_nets[i] = ConstraintNetwork(self.total_state_dim, self.total_action_dim)
@@ -115,7 +116,7 @@ class SafeDDPGagent(DDPGagent):
 
         # (1) Create solver as a globar variable
         l1_penalty = 1000
-        
+
         # (2) Problem Variables
         # Problem specific constants
         I     = np.eye(self.total_action_dim)

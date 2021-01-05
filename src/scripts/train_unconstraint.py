@@ -92,10 +92,10 @@ def main():
             state = next_state
             episode_reward += reward[0]
             if all(done) == True:
-                print(f"Episode: {episode+1}/{episodes}, episode reward {episode_reward}")
+                print(f"Episode: {episode+1}/{episodes}, episode reward {episode_reward}, collisions {episode_collisions}")
                 break
             elif step == steps_per_episode-1:
-                print(f"Episode: {episode+1}/{episodes}, episode reward {episode_reward}")
+                print(f"Episode: {episode+1}/{episodes}, episode reward {episode_reward}, collisions {episode_collisions}")
 
         if (episode != 0):
             if(episode%100 == 0):
@@ -135,7 +135,7 @@ def main():
                     rec.capture_frame()
             # Taking an action in the environment
             action = agent.get_action(np.concatenate(state))
-            state, reward, done,*rest = env.step(action)
+            next_state, reward,done ,_ , constraint = env.step(action_copy)
             cumulative_return += reward[0]
             if all(done) == True:
                 break

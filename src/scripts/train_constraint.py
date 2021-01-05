@@ -38,7 +38,7 @@ def main():
     # Usefull Directories
     abs_path = os.path.dirname(os.path.abspath(__file__)) + '/'
     constraint_networks_dir = abs_path + '../data/constraint_networks/'
-    output_dir = abs_path + '../data/agents/SafeDDPG_soft_300/'
+    output_dir = abs_path + '../data/agents/SafeDDPG_soft/'
 
     # Load the simulation scenario
     scenario = scenarios.load("centralized_safe.py").Scenario()
@@ -59,7 +59,7 @@ def main():
 
     # Training Parameters
     batch_size = 128
-    episodes   = 1000
+    episodes   = 200
     steps_per_episode = 300
     soften = True
 
@@ -111,7 +111,7 @@ def main():
             state = next_state
             episode_reward += reward[0]
             if all(done) == True:
-                print(f"Episode: {episode+1}/{episodes}, episode reward {episode_reward}, ecollisions {episode_collisions}")
+                print(f"Episode: {episode+1}/{episodes}, episode reward {episode_reward}, collisions {episode_collisions}")
                 break
             elif step == steps_per_episode-1:
                 print(f"Episode: {episode+1}/{episodes}, episode reward {episode_reward}, collisions {episode_collisions}")
@@ -160,7 +160,7 @@ def main():
                     rec.capture_frame()
             # Taking an action in the environment
             action = agent.get_action(np.concatenate(state), constraint)
-            state, reward, done,*rest = env.step(action)
+            next_state, reward,done ,_ , constraint = env.step(action_copy)
             cumulative_return += reward[0]
             if any(done):
                 break
@@ -171,6 +171,6 @@ def main():
             print("Saved video of 10 episodes to 'policy.mp4'.")
     env.close()
     print(f"Average return: {np.mean(returns):.2f}")
- 
+
 if __name__ == "__main__":
     main()

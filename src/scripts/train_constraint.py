@@ -121,8 +121,7 @@ def main():
                 print("updating agent ...")
                 data = agent.get_data()
                 for _ in range(200):
-                    agent.update(data, batch_size
-                            )
+                    agent.update(data, batch_size)
         # Save Results
         total_collisions += episode_collisions
         rewards.append(episode_reward)

@@ -5,6 +5,7 @@ import torch.optim as optim
 import torch.nn as nn
 
 import numpy as np
+import scipy as sp
 
 from qpsolvers import solve_qp
 

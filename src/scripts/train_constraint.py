@@ -50,6 +50,7 @@ def main():
                         scenario.reward,
                         scenario.observation,
                         info_callback=None,
+                        done_callback = scenario.done,
                         constraint_callback = scenario.constraints,
                         shared_viewer = True)
 
@@ -110,26 +111,18 @@ def main():
             state = next_state
             episode_reward += reward[0]
             if all(done) == True:
-                print(f"Episode: {episode+1}/{episodes}, episode reward {episode_reward}, exploration {noise.sigma}")
+                print(f"Episode: {episode+1}/{episodes}, episode reward {episode_reward}, ecollisions {episode_collisions}")
                 break
             elif step == steps_per_episode-1:
                 print(f"Episode: {episode+1}/{episodes}, episode reward {episode_reward}, collisions {episode_collisions}")
 
-
-            '''
-            if all(done) == True:
-                print(f"Episode: {episode+1}/{episodes}, episode reward {episode_reward}, exploration {noise.sigma}")
-                break
-            elif step == steps_per_episode-1:
-                print(f"Episode: {episode+1}/{episodes}, episode reward {episode_reward}")
-            '''
-
-        if (agent.memory.ptr == agent.memory.max_size):
-            print("updating agent ...")
-            data = agent.get_data()
-            for _ in range(200):
-                agent.update(data, batch_size)
-
+        if (episode != 0):
+            if(episode%100 == 0):
+                print("updating agent ...")
+                data = agent.get_data()
+                for _ in range(200):
+                    agent.update(data, batch_size
+                            )
         # Save Results
         total_collisions += episode_collisions
         rewards.append(episode_reward)
@@ -158,7 +151,6 @@ def main():
         state = env.reset()
         cumulative_return = 0
         # The environment will set terminal to True if an episode is done.
-        terminal = False
         env.reset()
         for t in range(episode_length):
             if i <= 10:
@@ -169,9 +161,9 @@ def main():
                     rec.capture_frame()
             # Taking an action in the environment
             action = agent.get_action(np.concatenate(state), constraint)
-            state, reward, terminal,*rest = env.step(action)
+            state, reward, done,*rest = env.step(action)
             cumulative_return += reward[0]
-            if bool(np.prod(terminal)):
+            if any(done):
                 break
         returns.append(cumulative_return)
         print(f"Achieved {cumulative_return:.2f} return.")

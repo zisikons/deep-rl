@@ -137,7 +137,7 @@ def main():
             action = agent.get_action(np.concatenate(state))
             state, reward, done,*rest = env.step(action)
             cumulative_return += reward[0]
-            if all(done):
+            if all(done) == True:
                 break
         returns.append(cumulative_return)
         print(f"Achieved {cumulative_return:.2f} return.")

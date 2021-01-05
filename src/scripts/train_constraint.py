@@ -59,8 +59,8 @@ def main():
 
     # Training Parameters
     batch_size = 128
-    episodes   = 200
-    steps_per_episode = 300
+    episodes   = 2000
+    steps_per_episode = 200
     soften = True
 
     # Define Agent
@@ -151,6 +151,8 @@ def main():
         cumulative_return = 0
         # The environment will set terminal to True if an episode is done.
         env.reset()
+        constraint = num_agents * [5*np.ones(constraint_dim)]
+
         for t in range(episode_length):
             if i <= 10:
                 #rec.capture_frame()

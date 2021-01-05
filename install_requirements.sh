@@ -7,6 +7,7 @@ git submodule update --init --recursive
 
 # Source multiagent-particle-envs
 pip3 install -e ./multiagent-particle-envs
+pip3 install qpsolvers
 
 # Install required Python Packages 
 # (should be done automatically in multiagent-particle-envs)

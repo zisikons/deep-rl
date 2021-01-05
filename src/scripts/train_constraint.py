@@ -164,7 +164,7 @@ def main():
             action_copy = copy.deepcopy(action)
             next_state, reward,done ,_ , constraint = env.step(action_copy)
             cumulative_return += reward[0]
-            if any(done):
+            if all(done) == True:
                 break
             # update state 
             state = next_state

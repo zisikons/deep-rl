@@ -5,32 +5,51 @@ This repository contains the source code and the implementation details for the 
 
 #### Useful Links:
 - Course [webpage](http://www.da.inf.ethz.ch/teaching/2020/DeepLearning/)
-- Datasets [:floppy_disk:](https://polybox.ethz.ch/index.php/s/H9GySXt0Dyrwcoz) 
-- Team meetings every: < and yet, no date found :( >
 
-## Timeline
+## Project Description
 
-| Week          |   Date     |   Description     | Progress Made       | 
-| ------------- |:----------:| :----------------:|:--------------------:|
-| Week 1        | 01-10-2020 | Meet and Greet    | :beers: :wine_glass: :cocktail:    |
-| Week 2        | 19-10-2020 | -                 |                      |        |                  |
-| Week 3        | 09-11-2020 | -                 |                      |        |                  |
-| Week 4        | 30-11-2020 | -                 |                      |        |                  |
-| Week 5        | 21-12-2020 | -                 |                      |        |                  |
+## Installation
+To install and execute the project's source code follow the steps in the following snippet:
+**WARNING:** Installs packages
 
-## TODOs:
+```
+git clone git@github.com:zisikons/deep-rl.git
+cd ./deep-rl
+sh install_requirements.sh  # installs all the requirements
+```
 
-#### Week 1: Research
-On the first week of the project each member has to research on a specific topic.
-- Athina Nisioti:      Medical Applications
-- Dimitris Gkouletsos: Control & Artificial Intelligence 
-- Ziyad Sheebaelhamd:  GANs
-- Konstantinos Zisis:  Game Theory Applications
+Alternatively if you don't want to install the new packages on your computer, then make sure to at least:
+* Download the code from the forked [multiagent-particle-envs](https://github.com/zisikons/multiagent-particle-envs/tree/a8ba7c4c49edbb7c164426fb90e141af465380b1)
+```
+git submodule update --init --recursive
+```
+* Download the following python packages:
+```
+gym==0.10.5
+pyglet==1.3.2
+qpsolvers
+```
 
-*Please Attach the papers - resources found under the "Resources" section!!!*
+## Execution
+Once the code is downloaded and everything is set, in order to train an agent you need to do the following:
+```
+python3 scripts/collect_data.py        # Uses the simulator to generate the datasets for the
+                                       # constraint sensitivity Neural Networks
+                                    
+python3 core/constraint_network.py     # Trains the constraint sensitivity Neural Networks
+                                       # (not required for the vanilla DDPG agent) 
 
-## Resources
+python3 scripts/train_<agent_type>.py  # Trains one of the 3 RL agents that were developed
+                                       # during this project
+                                       
+python3 scripts/plot_results.py        # Generates plot to compare the 3 agents
+                                       # (requires training of all agents)
+```
+*Note: The above sequence takes a considerable amount of time.*
 
+
+## References
+<Add papers here>
 
 ## Contributors
 - Athina Nisioti (@anisioti)

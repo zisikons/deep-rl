@@ -127,7 +127,7 @@ def main():
         if (agent.memory.ptr == agent.memory.max_size):
             print("updating agent ...")
             data = agent.get_data()
-            for _ in range(500):
+            for _ in range(200):
                 agent.update(data, batch_size)
 
         # Save Results
@@ -135,6 +135,9 @@ def main():
         rewards.append(episode_reward)
         collisions.append(total_collisions)
         infeasible.append(agent.get_infeasible())
+
+        print("Interventions =" + str(agent.get_interventions()))
+        print("Problem Infeasible =" + str(agent.get_infeasible()))
 
     # Save Experiment results
     agent.save_params(output_dir)   # agent networks

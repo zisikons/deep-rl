@@ -55,7 +55,7 @@ def main():
 
     # Training Parameters
     batch_size = 128
-    episodes = 30000
+    episodes = 2000
     steps_per_episode = 200
 
 
@@ -99,7 +99,7 @@ def main():
         if (agent.memory.ptr == agent.memory.max_size):
             print("updating agent ...")
             data = agent.get_data()
-            for _ in range(500):
+            for _ in range(200):
                 agent.update(data, batch_size)
 
         # Save Results

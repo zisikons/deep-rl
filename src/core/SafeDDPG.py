@@ -26,6 +26,8 @@ import scipy.linalg
 
 from core.DDPG import DDPGagent
 
+from core.constraint_network import ConstraintNetwork
+
 class SafeDDPGagent(DDPGagent):
     def __init__(self, state_dim, act_dim, constraint_dim, num_agents, constraint_networks_dir, col_margin = 0.35 ,
             hidden_size=256, actor_learning_rate=1e-4, critic_learning_rate=1e-3,
@@ -39,16 +41,21 @@ class SafeDDPGagent(DDPGagent):
         # Extra Params
         self.col_margin = col_margin
         self.constraint_dim = constraint_dim
+
+        self.total_state_dim = self.state_dim * self.num_agents
         self.total_constraint_dim = self.constraint_dim * self.num_agents
         self.total_action_dim = self.act_dim * self.num_agents
 
         # Initialize constraint networks
-        self.constraint_nets = self.total_constraint_dim * []
+        self.constraint_nets = self.total_constraint_dim * \
+                             [ConstraintNetwork(self.total_state_dim, self.total_action_dim)]
 
-        for i, net in self.constraint_nets:
-            net = ConstraintNetwork(self.total_constraint_dim, self.total_action_dim)
+        for i, net in enumerate(self.constraint_nets):
+
+            #net = ConstraintNetwork(self.total_constraint_dim, self.total_action_dim)
             net.load_state_dict(torch.load(constraint_networks_dir
                                            + "constraint_net_" + str(i) + ".pkl"))
+
         # Define Solver Globaly
         self.solver_interventions = 0
         self.solver_infeasible    = 0

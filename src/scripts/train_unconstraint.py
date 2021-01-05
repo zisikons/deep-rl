@@ -71,7 +71,6 @@ def main():
         state = env.reset()
         episode_reward = 0
         episode_collisions = 0
-
         for step in range(steps_per_episode):
 
             action = agent.get_action(np.concatenate(state))

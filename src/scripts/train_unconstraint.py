@@ -56,7 +56,7 @@ def main():
 
     # Training Parameters
     batch_size = 128
-    episodes = 2000
+    episodes = 200
     steps_per_episode = 200
 
 
@@ -133,6 +133,7 @@ def main():
                     rec.capture_frame()
             # Taking an action in the environment
             action = agent.get_action(np.concatenate(state))
+            action_copy = copy.deepcopy(action)
             next_state, reward,done ,_ , constraint = env.step(action_copy)
             cumulative_return += reward[0]
             

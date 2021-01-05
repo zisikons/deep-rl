@@ -161,12 +161,14 @@ def main():
                     rec.capture_frame()
             # Taking an action in the environment
             action = agent.get_action(np.concatenate(state), constraint)
+            action_copy = copy.deepcopy(action)
             next_state, reward,done ,_ , constraint = env.step(action_copy)
             cumulative_return += reward[0]
             if any(done):
                 break
             # update state 
             state = next_state
+
         returns.append(cumulative_return)
         print(f"Achieved {cumulative_return:.2f} return.")
         if i == 10:

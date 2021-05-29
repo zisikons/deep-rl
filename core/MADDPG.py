@@ -13,7 +13,7 @@ class ReplayBuffer:
     """
     Buffer to store trajectories.
     """
-    def __init__(self, state_dim, act_dim, num_agents, size):
+    def __init__(self, size):
 
         self.state_buf      = list()
         self.act_buf        = list()
@@ -35,10 +35,17 @@ class ReplayBuffer:
             self.ptr -= 1
 
         # Environment related, subject to change
-        self.state_buf.append(np.expand_dims(state, axis = 0))
-        self.act_buf.append(np.expand_dims(act, axis = 0))
-        self.rew_buf.append(np.array(rew, ndmin = 1))
-        self.next_state_buf.append(np.expand_dims(next_state, axis = 0))
+        # Old version
+        #self.state_buf.append(np.expand_dims(state, axis = 0))
+        #self.act_buf.append(np.expand_dims(act, axis = 0))
+        #self.rew_buf.append(np.array(rew, ndmin = 1))
+        #self.next_state_buf.append(np.expand_dims(next_state, axis = 0))
+
+        # New version (best suited for decentralized)
+        self.state_buf.append(state)
+        self.act_buf.append(act)
+        self.rew_buf.append(rew)
+        self.next_state_buf.append(next_state)
         self.ptr += 1
 
     def get(self):
@@ -146,7 +153,7 @@ class Actor(nn.Module):
         x = nn.Tanh()(self.layers[-1](x))
         return x
 
-class MADDPG:
+class MADDPGagent:
 
     def __init__(self, N_agents, state_dim, act_dim, actor_learning_rate=1e-4,
                  critic_learning_rate=1e-3, gamma=0.99, tau=1e-2, max_memory_size=16000,
@@ -178,6 +185,7 @@ class MADDPG:
                 target_param.data.copy_(param.data)
 
         # Replay Buffer
+        self.memory = ReplayBuffer(max_memory_size)
 
 
 if __name__ == '__main__':

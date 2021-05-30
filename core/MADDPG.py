@@ -322,6 +322,29 @@ class MADDPGagent:
 
         return x_input, a_input
 
+    def save_params(self, directory):
+
+        # Export Results for training
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        for i in range(self.N_agents):
+            # Save Actor Network i
+            torch.save(self.actors[i].state_dict(), directory + 'actor_net_'+str(i)+'.pkl')
+
+            # Save Critic Network i
+            torch.save(self.critics[i].state_dict(), directory + 'critic_net_'+str(i)+'.pkl')
+
+    def load_params(self, directory):
+
+        # Export Results for training
+        if not os.path.exists(directory):
+            raise Exception('There exists no such directory.')
+
+        for i in range(self.N_agents):
+            self.actors[i].load_state_dict(torch.load(directory + 'actor_net_'+str(i)+'.pkl'))
+            self.critics[i].load_state_dict(torch.load(directory + 'critic_net_'+str(i)+'.pkl'))
+
 if __name__ == '__main__':
 
     state = torch.tensor(np.random.rand(12,))

@@ -57,10 +57,14 @@ def main():
     batch_size = 128
     episodes = 8000
     steps_per_episode = 300
+    agent_update_rate = 10 # update agent every # episodes old:100
 
 
     # MADDPG Agent
-    agent = MADDPGagent(state_dim = state_dim, act_dim = act_dim, N_agents = num_agents)
+    agent = MADDPGagent(state_dim = state_dim,
+                        act_dim = act_dim,
+                        N_agents = num_agents,
+                        batch_size = batch_size)
 
     # Will stay as is or?
     noise = OUNoise(act_dim = act_dim, num_agents = num_agents, act_low = -1, act_high = 1, decay_period = episodes)
@@ -75,40 +79,46 @@ def main():
         episode_collisions = 0
         for step in range(steps_per_episode):
 
-            #action = agent.get_action(np.concatenate(state))
-            #action = np.concatenate(action)
+            action = agent.get_action(state)
             #action = noise.get_action(action, step, episode)
-            #action = np.split(action, num_agents)
-            #action_copy = copy.deepcopy(action) # list is mutable
+            action_copy = copy.deepcopy(action) # list is mutable
             # DEBUG
-            action = [np.random.rand(2,),np.random.rand(2,),np.random.rand(2,)]
-            action_copy = copy.deepcopy(action)
-            next_state, reward,done ,_ , constraint = env.step(action_copy)
+            #action = [np.random.rand(2,),np.random.rand(2,),np.random.rand(2,)]
+            #action_copy = copy.deepcopy(action)
+            next_state, reward, done ,_ , constraint = env.step(action_copy)
 
             agent.memory.store(state, action, reward, next_state)
-            ipdb.set_trace()
-            continue
 
-            # Count collisions
-            for i in range(len(env.world.agents)):
-                for j in range(i + 1, len(env.world.agents), 1):
-                    if scenario.is_collision(env.world.agents[i],env.world.agents[j]):
-                        episode_collisions += 1
+            # Count collisions #TODO
+            #for i in range(len(env.world.agents)):
+            #    for j in range(i + 1, len(env.world.agents), 1):
+            #        if scenario.is_collision(env.world.agents[i],env.world.agents[j]):
+            #            episode_collisions += 1
 
-            state = next_state
-            episode_reward += reward[0]
-            if all(done) == True:
-                print(f"Episode: {episode+1}/{episodes}, episode reward {episode_reward}, collisions {episode_collisions}")
+
+            # Check if episode terminates
+            if all(done) == True or step == steps_per_episode-1:
+                #print(f"Episode: {episode+1}/{episodes}, \
+                #        episode reward {episode_reward}, \
+                #        collisions {episode_collisions}")
                 break
-            elif step == steps_per_episode-1:
-                print(f"Episode: {episode+1}/{episodes}, episode reward {episode_reward}, collisions {episode_collisions}")
+            # OLD way, I think now it is cleaner
+            #elif step == steps_per_episode-1:
+            #    print(f"Episode: {episode+1}/{episodes}, \
+            #            episode reward {episode_reward}, \
+            #            collisions {episode_collisions}")
 
-        if (episode != 0):
-            if(episode%100 == 0):
-                print("updating agent ...")
-                data = agent.get_data()
-                for _ in range(200):
-                    agent.update(data, batch_size)
+            # Prepare Next iteration
+            state = next_state
+            episode_reward += reward[0] # will all agents have the same reward?
+
+        # Update Agents every # episodes
+        if(episode % agent_update_rate == 0 and episode > 0):
+            # Perform 200 updates (for the time fixed)
+            print("updating agent ...")
+            for _ in range(200):
+                agent.update()
+            print("done")
 
         # Save Results
         total_collisions += episode_collisions

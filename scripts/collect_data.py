@@ -39,12 +39,12 @@ def get_env_params(env):
 def main():
 
     # Experiment Configuration
-    episodes          = 5000
+    episodes          = 2000
     steps_per_episode = 200
     output_dir        = '../data/'
 
     # Load the simulation scenario
-    scenario = scenarios.load("centralized_safe.py").Scenario()
+    scenario = scenarios.load("decentralized_safe.py").Scenario()
     world    = scenario.make_world()
 
     # Environment Setup
@@ -61,12 +61,13 @@ def main():
 
     # Data Storage Containers
     size = episodes*(steps_per_episode - 1)
-    state_buf        = np.zeros([size, state_dim])
+    state_buf       = np.zeros([size, state_dim])
     action_buf      = np.zeros([size, action_dim])
     constraint_diff = np.zeros([size, constraint_dim])
 
     # Simulate the environment and generate dataset for constraints networks
     for episode in range(episodes):
+        print(f'episode={episode}')
 
         # Episode "Preprocessing"
         state          = env.reset()
@@ -104,9 +105,9 @@ def main():
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    pd.DataFrame(state_buf).to_csv(output_dir + "D_state.csv")
-    pd.DataFrame(action_buf).to_csv(output_dir + "D_action.csv")
-    pd.DataFrame(constraint_diff).to_csv(output_dir + "D_constraint.csv")
+    pd.DataFrame(state_buf).to_csv(output_dir + "D_state_decentralized.csv")
+    pd.DataFrame(action_buf).to_csv(output_dir + "D_action_decentralized.csv")
+    pd.DataFrame(constraint_diff).to_csv(output_dir + "D_constraint_decentralized.csv")
     print("Done... Data saved")
 
 if __name__ == "__main__":

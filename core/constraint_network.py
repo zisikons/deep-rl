@@ -107,7 +107,7 @@ def main():
     # Settings
     abs_path = os.path.dirname(os.path.abspath(__file__)) + '/'
     datasets_dir = abs_path + '../data/'
-    output_dir   = abs_path + '../data/constraint_networks/'
+    output_dir   = abs_path + '../data/constraint_networks_MADDPG/'
 
     # Training Settings
     EPOCHS = 20
@@ -119,9 +119,9 @@ def main():
         os.makedirs(output_dir)
 
     # Import Datasets
-    state           = pd.read_csv(datasets_dir + "D_state.csv").to_numpy()
-    action          = pd.read_csv(datasets_dir + "D_action.csv").to_numpy()
-    constraint_diff = pd.read_csv(datasets_dir + "D_constraint.csv").to_numpy()
+    state           = pd.read_csv(datasets_dir + "D_state_decentralized.csv").to_numpy()
+    action          = pd.read_csv(datasets_dir + "D_action_decentralized.csv").to_numpy()
+    constraint_diff = pd.read_csv(datasets_dir + "D_constraint_decentralized.csv").to_numpy()
 
     # Remove Indices
     state  = state[:, 1:]

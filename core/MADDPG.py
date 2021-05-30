@@ -205,8 +205,6 @@ class MADDPGagent:
         # Loss functions and other weird artifacts
         self.critic_criterion  = nn.MSELoss(reduction = 'mean')
 
-        #yolo_optimizer = optim.Adam(self.actors[1].parameters, lr = actor_learning_rate)
-        #ipdb.set_trace()
         self.actor_optimizers = [optim.Adam(self.actors[i].parameters(), lr=actor_learning_rate)
                                  for i in range(N_agents)]
         self.critic_optimizers = [optim.Adam(self.critics[i].parameters(), lr=critic_learning_rate)

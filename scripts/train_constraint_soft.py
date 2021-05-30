@@ -114,6 +114,7 @@ def main():
             elif step == steps_per_episode-1:
                 print(f"Episode: {episode+1}/{episodes}, episode reward {episode_reward}, collisions {episode_collisions}")
 
+        # Agent Update
         if (episode != 0):
             if(episode%100 == 0):
                 print("updating agent ...")

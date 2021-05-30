@@ -33,7 +33,7 @@ def main():
 
     # Usefull Directories
     abs_path = os.path.dirname(os.path.abspath(__file__)) + '/'
-    constraint_networks_dir = abs_path + '../data/constraint_networks/'
+    constraint_networks_dir = abs_path + '../data/constraint_networks_MADDPG/'
     output_dir = abs_path + '../data/agents/MADDPG/'
 
     # Load the simulation scenario
@@ -79,12 +79,16 @@ def main():
         episode_collisions = 0
         for step in range(steps_per_episode):
 
+            # Compute action
             action = agent.get_action(state)
-            #action = noise.get_action(action, step, episode)
+
+            # Add exploration noise
+            action = np.concatenate(action)
+            action = noise.get_action(action, step, episode)
+            action = np.split(action, num_agents)
+
+            # Feed the action to the environment
             action_copy = copy.deepcopy(action) # list is mutable
-            # DEBUG
-            #action = [np.random.rand(2,),np.random.rand(2,),np.random.rand(2,)]
-            #action_copy = copy.deepcopy(action)
             next_state, reward, done ,_ , constraint = env.step(action_copy)
 
             agent.memory.store(state, action, reward, next_state)

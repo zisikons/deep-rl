@@ -14,7 +14,6 @@ from core.Noise import OUNoise
 
 from gym.wrappers.monitoring.video_recorder import VideoRecorder
 import ipdb
-import time
 
 
 def get_env_params(env):
@@ -92,17 +91,21 @@ def main():
 
         for step in range(steps_per_episode):
 
+            # Compute safe action
             action = agent.get_action(state,constraint)
-            #action = noise.get_action(action, step, episode)
+
+            # Add exploration noise
+            action = np.concatenate(action)
+            action = noise.get_action(action, step, episode)
+            action = np.split(action, num_agents)
+
+            # Feed the action to the environment
             action_copy = copy.deepcopy(action) # list is mutable
-            # DEBUG
-            #action = [np.random.rand(2,),np.random.rand(2,),np.random.rand(2,)]
-            #action_copy = copy.deepcopy(action)
             next_state, reward, done ,_ , constraint = env.step(action_copy)
 
             agent.memory.store(state, action, reward, next_state)
 
-            # Count collisions #TODO
+            # Count collisions
             for i in range(len(env.world.agents)):
                 for j in range(i + 1, len(env.world.agents), 1):
                     if scenario.is_collision(env.world.agents[i],env.world.agents[j]):
@@ -130,10 +133,7 @@ def main():
             # Perform 200 updates (for the time fixed)
             print("updating agent ...")
             for _ in range(200):
-                start = time.time()
                 agent.update()
-                end = time.time()
-                print(end - start)
             print("done")
 
         # Save Results

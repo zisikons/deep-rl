@@ -110,7 +110,7 @@ class Critic(nn.Module):
             x = nn.ReLU()(layer(x))
 
         # Last layer (linear)
-        x = self.layers[-1](x)
+        x = self.layers[-1](x) 
 
         return x
 
@@ -156,7 +156,7 @@ class Actor(nn.Module):
 # Note: Buffer size is changed
 class MADDPGagent:
 
-    def __init__(self, N_agents, state_dim, act_dim, actor_learning_rate=1e-4,
+    def __init__(self, N_agents, state_dim, act_dim, critic_state_mask = [0,1,2,3,-1,-2], actor_learning_rate=1e-4,
                  critic_learning_rate=1e-3, gamma=0.99, tau=1e-2, max_memory_size=30000,
                  hidden_size_critic = [500, 500], hidden_size_actor = [100, 100],
                  batch_size = 128):
@@ -171,7 +171,7 @@ class MADDPGagent:
 
         # Critics
         # Note: Sunday quick and dirty hack to avoid duplicate states
-        self.critic_state_mask = [0, 1, 2, 3, 8, 9]
+        self.critic_state_mask = critic_state_mask
         self.critic_state_dim = N_agents * len(self.critic_state_mask)
         self.critic_act_dim   = N_agents * self.act_dim
 
@@ -246,22 +246,20 @@ class MADDPGagent:
 
         critics_loss  = []
         policy_losses = []
-        for idx, (actor, critic, actor_target, critic_target) in enumerate(zip(self.actors,
-                                                                               self.critics,
-                                                                            self.actors_target,
-                                                                            self.critics_target)):
-
+        for idx, (actor, critic, critic_target) in enumerate(zip(self.actors,
+                                                                 self.critics,
+                                                                 self.critics_target)):
             # Q-values for current state
             Q_vals = critic(x_crit, a_crit).squeeze(1)
 
             # Evaluate next state
             next_actions   = []
             next_state_mat = np.array(next_states)
-
+            state_mat      = np.array(states)
+            
             for idx_, actor_ in enumerate(self.actors_target):
-                #print(f'idx_ = {idx_}')
                 next_actions.append(
-                        actor_(torch.tensor(next_state_mat[:,idx_,:],dtype=torch.float64)))
+                        actor_(torch.tensor(next_state_mat[:,idx_,:],dtype=torch.float64))) 
             # merge next actions
             A_prime = torch.cat(next_actions, axis = 1)
 
@@ -270,15 +268,24 @@ class MADDPGagent:
             S_prime = torch.tensor(next_state_mat.reshape(self.batch_size, self.critic_state_dim),
                                                         dtype=torch.float64)
 
-            next_Q = critic_target(S_prime, A_prime).squeeze(1)
+            next_Q = critic_target(S_prime, A_prime.detach()).squeeze(1).detach()
 
             # Copmute Q_prime and loss based on the reward
             Q_prime = torch.tensor(reward_mat[:, idx], dtype=torch.float64) + self.gamma * next_Q
             critics_loss.append(self.critic_criterion(Q_vals, Q_prime))
 
             # Update Actor
-            policy_losses.append(-critic(x_crit, a_crit).mean())
+            a_tot = []
+            for i in range(self.N_agents):
 
+                if i != idx:
+                    # detach the computational graph from all other agents
+                    a_tot.append(self.actors[i](torch.tensor(state_mat[:,idx,:], dtype = torch.float64)).detach())
+                else: 
+                    a_tot.append(self.actors[i](torch.tensor(state_mat[:,idx,:], dtype = torch.float64)))
+            
+            a_tot = torch.cat(a_tot,1)
+            policy_losses.append(-critic(x_crit, a_tot).mean())
         for i in range(self.N_agents):
             self.actor_optimizers[i].zero_grad()
             policy_losses[i].backward()
@@ -294,7 +301,6 @@ class MADDPGagent:
 
             for target_param, param in zip(self.critics_target[i].parameters(), self.critics[i].parameters()):
                 target_param.data.copy_(param.data * self.tau + target_param.data * (1.0 - self.tau))
-
     def get_Q_state(self, batch):
 
         x_input = torch.zeros((self.batch_size, self.critic_state_dim), dtype=torch.float64)
@@ -303,9 +309,8 @@ class MADDPGagent:
         for t in range(self.batch_size):
             # Get states
             x = []
-            desired_idx = [0, 1, 2, 3, 8, 9]
             for agent in range(self.N_agents):
-                x += [torch.tensor(batch['states'][t][agent][desired_idx], dtype=torch.float64)]
+                x += [torch.tensor(batch['states'][t][agent][self.critic_state_mask], dtype=torch.float64)]
 
             x_input[t, :] = torch.cat(x)
 
@@ -315,10 +320,6 @@ class MADDPGagent:
                 a += [torch.tensor(batch['actions'][t][agent], dtype=torch.float64)]
 
             a_input[t, :] = torch.cat(a)
-
-        # Convert to torch tensors
-        #x_input = torch.tensor(x_input)
-        #a_input = torch.tensor(a_input)
 
         return x_input, a_input
 

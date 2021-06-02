@@ -110,7 +110,7 @@ def main():
     output_dir   = abs_path + '../data/constraint_networks_MADDPG/'
 
     # Training Settings
-    EPOCHS = 20
+    EPOCHS = 100
     BATCH_SIZE = 256
     VAL_RATIO = 0.1
 

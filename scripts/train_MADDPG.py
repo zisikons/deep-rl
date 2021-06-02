@@ -15,20 +15,6 @@ from core.Noise import OUNoise
 from gym.wrappers.monitoring.video_recorder import VideoRecorder
 import ipdb
 
-
-def get_env_params(env):
-    ''' Extract the environment parameters '''
-    action_space = env.action_space         # list of agents' action spaces, each is a gym box 
-    action_dim = action_space[0].shape[0]
-
-    state_space = env.observation_space     # list of agents' state spaces, each is a gym box  
-    state_dim = state_space[0].shape[0]
-
-    num_agents = len(state_space)
-
-    assert num_agents == len(action_space)
-    return state_dim, action_dim, num_agents
-
 def main():
 
     # Usefull Directories
@@ -50,20 +36,24 @@ def main():
                         constraint_callback = scenario.constraints,
                         shared_viewer = True)
 
-    # environment properties
-    state_dim, act_dim, num_agents = get_env_params(env)
-
+    # get the scenario parameters
+    env_params = env.get_env_parameters()
+    state_dim = env_params["state_dim"] 
+    act_dim   = env_params["act_dim"]
+    num_agents = env_params["num_agents"]
+    print(env_params) 
     # Training Parameters
     batch_size = 128
     episodes = 8000
     steps_per_episode = 300
-    agent_update_rate = 10 # update agent every # episodes old:100
+    agent_update_rate = 100 # update agent every # episodes old:100
 
 
     # MADDPG Agent
     agent = MADDPGagent(state_dim = state_dim,
                         act_dim = act_dim,
                         N_agents = num_agents,
+                        critic_state_mask = np.arange(state_dim).tolist(),
                         batch_size = batch_size)
 
     # Will stay as is or?
@@ -84,7 +74,7 @@ def main():
 
             # Add exploration noise
             action = np.concatenate(action)
-            action = noise.get_action(action, step, episode)
+            #action = noise.get_action(action, step, episode)
             action = np.split(action, num_agents)
 
             # Feed the action to the environment
@@ -102,9 +92,9 @@ def main():
 
             # Check if episode terminates
             if all(done) == True or step == steps_per_episode-1:
-                #print(f"Episode: {episode+1}/{episodes}, \
-                #        episode reward {episode_reward}, \
-                #        collisions {episode_collisions}")
+                print(f"Episode: {episode+1}/{episodes}, \
+                        episode reward {episode_reward}, \
+                        collisions {episode_collisions}")
                 break
             # OLD way, I think now it is cleaner
             #elif step == steps_per_episode-1:

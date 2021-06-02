@@ -53,12 +53,17 @@ def main():
                         constraint_callback = scenario.constraints,
                         shared_viewer = True)
 
-    # environment properties
-    state_dim, act_dim, N_agents, constraint_dim = get_env_params(env)
+    # get the scenario parameters
+    env_params = env.get_env_parameters()
+    state_dim = env_params["state_dim"]
+    act_dim   = env_params["act_dim"]
+    constraint_dim = env_params["constraint_dim"]
+    N_agents = env_params["num_agents"]
+    print(env_params) 
 
     # Training Parameters
     batch_size = 128
-    episodes = 20000
+    episodes = 8000
     steps_per_episode = 300
     agent_update_rate = 100 # update agent every # episodes old:100
 
@@ -126,13 +131,12 @@ def main():
 
             # Prepare Next iteration
             state = next_state
-            episode_reward += reward[0] # will all agents have the same reward?
-
+            episode_reward += (sum(reward)/N_agents) # average reward over all agents
         # Update Agents every # episodes
         if(episode % agent_update_rate == 0 and episode > 0):
             # Perform 200 updates (for the time fixed)
             print("updating agent ...")
-            for _ in range(200):
+            for _ in range(50):
                 agent.update()
             print("done")
 

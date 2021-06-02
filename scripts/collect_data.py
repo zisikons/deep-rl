@@ -39,7 +39,7 @@ def get_env_params(env):
 def main():
 
     # Experiment Configuration
-    episodes          = 2000
+    episodes          = 1000
     steps_per_episode = 200
     output_dir        = '../data/'
 

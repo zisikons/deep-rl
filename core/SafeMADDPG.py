@@ -21,16 +21,20 @@ class SafeMADDPGagent(MADDPGagent):
     #        gamma=0.99, tau=1e-2, max_memory_size=16000,  soften = True):
 
     def __init__(self, N_agents, state_dim, act_dim,
-                 constraint_networks_dir, constraint_dim, col_margin=0.35,
+                 constraint_networks_dir, constraint_dim,critic_state_mask = [0,1,2,3,-1,-2], col_margin=0.35,
                  actor_learning_rate=1e-4,
                  critic_learning_rate=1e-3, gamma=0.99, tau=1e-2, max_memory_size=30000,
                  hidden_size_critic = [500, 500], hidden_size_actor = [100, 100],
                  batch_size = 128, soften = True):
 
         # Call MADDPGagent's constructor
-        super().__init__(N_agents, state_dim, act_dim, actor_learning_rate,
-                         critic_learning_rate, gamma, tau, max_memory_size,
-                         hidden_size_critic, hidden_size_actor, batch_size)
+        super().__init__(N_agents = N_agents, state_dim = state_dim, 
+                         act_dim = act_dim, critic_state_mask = critic_state_mask, 
+                         actor_learning_rate = actor_learning_rate,
+                         critic_learning_rate = critic_learning_rate, gamma = gamma,
+                         tau = tau, max_memory_size = max_memory_size,
+                         hidden_size_critic = hidden_size_critic, hidden_size_actor = hidden_size_actor,
+                         batch_size = batch_size)
 
         # Extra Params
         self.col_margin = col_margin
@@ -79,13 +83,14 @@ class SafeMADDPGagent(MADDPGagent):
             action = self.actors[i](s).detach()
             actions.append(action)
 
-        # merge action and space vectors
-        action_vec = torch.cat(actions)
-        state_vec  = torch.tensor(np.concatenate(state),dtype=torch.float64)
+        # merge action and state vectors of all agents
+        action_total = torch.cat(actions)
+        state_total  = torch.tensor(np.concatenate(state),dtype=torch.float64)
 
+        # correct unsafe actions
+        action = self.correct_actions(state_total, action_total, constraint)
+        
         # transform numpy array into list of 3 actions
-        action = self.correct_actions(state_vec, action_vec, constraint)
-
         actions = np.split(action, self.N_agents)
         return actions
 

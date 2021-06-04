@@ -10,6 +10,7 @@ import copy
 from multiagent.environment import MultiAgentEnv
 from multiagent.policy import InteractivePolicy
 import multiagent.scenarios as scenarios
+np.random.seed(2021)
 
 def get_env_params(env):
     ''' Extract the environment parameters '''
@@ -39,7 +40,7 @@ def get_env_params(env):
 def main():
 
     # Experiment Configuration
-    episodes          = 1000
+    episodes          = 5000
     steps_per_episode = 200
     output_dir        = '../data/'
 

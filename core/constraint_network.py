@@ -3,9 +3,11 @@ import torch
 import torch.nn as nn
 import torch.functional as F
 import torch.optim as optimizer
-
 import numpy as np
 import pandas as pd
+
+torch.manual_seed(2021)    # reproducible 
+np.random.seed(2021)
 
 class ConstraintNetwork(nn.Module):
     '''

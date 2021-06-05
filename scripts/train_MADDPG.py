@@ -44,7 +44,7 @@ def main():
     print(env_params) 
     # Training Parameters
     batch_size = 128
-    episodes = 8000
+    episodes = 1000
     steps_per_episode = 300
     agent_update_rate = 100 # update agent every # episodes old:100
 
@@ -74,7 +74,7 @@ def main():
 
             # Add exploration noise
             action = np.concatenate(action)
-            #action = noise.get_action(action, step, episode)
+            action = noise.get_action(action, step, episode)
             action = np.split(action, num_agents)
 
             # Feed the action to the environment
@@ -83,11 +83,11 @@ def main():
 
             agent.memory.store(state, action, reward, next_state)
 
-            # Count collisions #TODO
-            #for i in range(len(env.world.agents)):
-            #    for j in range(i + 1, len(env.world.agents), 1):
-            #        if scenario.is_collision(env.world.agents[i],env.world.agents[j]):
-            #            episode_collisions += 1
+            # Count collisions
+            for i in range(len(env.world.agents)):
+                for j in range(i + 1, len(env.world.agents), 1):
+                    if scenario.is_collision(env.world.agents[i],env.world.agents[j]):
+                        episode_collisions += 1
 
 
             # Check if episode terminates
@@ -96,11 +96,6 @@ def main():
                         episode reward {episode_reward}, \
                         collisions {episode_collisions}")
                 break
-            # OLD way, I think now it is cleaner
-            #elif step == steps_per_episode-1:
-            #    print(f"Episode: {episode+1}/{episodes}, \
-            #            episode reward {episode_reward}, \
-            #            collisions {episode_collisions}")
 
             # Prepare Next iteration
             state = next_state
@@ -110,7 +105,7 @@ def main():
         if(episode % agent_update_rate == 0 and episode > 0):
             # Perform 200 updates (for the time fixed)
             print("updating agent ...")
-            for _ in range(200):
+            for _ in range(50):
                 agent.update()
             print("done")
 

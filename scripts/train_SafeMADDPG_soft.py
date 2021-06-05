@@ -37,7 +37,7 @@ def main():
     # Usefull Directories
     abs_path = os.path.dirname(os.path.abspath(__file__)) + '/'
     constraint_networks_dir = abs_path + '../data/constraint_networks_MADDPG/'
-    output_dir = abs_path + '../data/agents/MADDPG/'
+    output_dir = abs_path + '../data/agents/SafeMADDPG_soft/'
 
     # Load the simulation scenario
     scenario = scenarios.load("decentralized_safe.py").Scenario()
@@ -63,7 +63,7 @@ def main():
 
     # Training Parameters
     batch_size = 128
-    episodes = 8000
+    episodes = 5000
     steps_per_episode = 300
     agent_update_rate = 100 # update agent every # episodes old:100
 
@@ -97,7 +97,7 @@ def main():
         for step in range(steps_per_episode):
 
             # Compute safe action
-            action = agent.get_action(state,constraint)
+            action, intervention_metric = agent.get_action(state,constraint)
 
             # Add exploration noise
             action = np.concatenate(action)
@@ -107,7 +107,8 @@ def main():
             # Feed the action to the environment
             action_copy = copy.deepcopy(action) # list is mutable
             next_state, reward, done ,_ , constraint = env.step(action_copy)
-
+            
+            reward = [reward[i] - intervention_metric[i] for i in range(N_agents)]
             agent.memory.store(state, action, reward, next_state)
 
             # Count collisions
@@ -123,12 +124,6 @@ def main():
                         episode reward {episode_reward}, \
                         collisions {episode_collisions}")
                 break
-            # OLD way, I think now it is cleaner
-            #elif step == steps_per_episode-1:
-            #    print(f"Episode: {episode+1}/{episodes}, \
-            #            episode reward {episode_reward}, \
-            #            collisions {episode_collisions}")
-
             # Prepare Next iteration
             state = next_state
             episode_reward += (sum(reward)/N_agents) # average reward over all agents
@@ -174,10 +169,10 @@ def main():
                 else:
                     rec.capture_frame()
             # Taking an action in the environment
-            action = agent.get_action(state,constraint)
+            action, _ = agent.get_action(state,constraint)
             action_copy = copy.deepcopy(action)
             next_state, reward,done ,_ , constraint = env.step(action_copy)
-            cumulative_return += reward[0]
+            cumulative_return += (sum(reward)/N_agents)
 
             # update state 
             state = next_state

@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 import os
+
 
 def main():
     # Usefull Directories
@@ -13,30 +16,44 @@ def main():
         os.makedirs(target_dir)
 
     true_run = True
-    N = 1000
+    N = 8000
+
+    seed_range = np.arange(5,7)
 
     safe_maddpg_soft = abs_path + '../data/agents/SafeMADDPG_soft/'
     safe_maddpg_hard = abs_path + '../data/agents/SafeMADDPG_hard/'
     maddpg_vanilla   = abs_path + '../data/agents/MADDPG/'
+     
+    rewards_soft    = []
+    rewards_hard    = []
+    rewards_vanilla = []
+    
+    infeasibilities_soft = []
+    infeasibilities_hard = []
+    for seed in seed_range:
 
+        # Import Results
+        #rewards_soft.append(np.load(safe_maddpg_soft +"seed" + str(seed) + "/" + 'rewards.npy')[0:N:10])
+        rewards_hard.append(np.load(safe_maddpg_hard + "seed" + str(seed) + "/"+'rewards.npy')[0:N])
+        #rewards_maddpg.append(np.load(maddpg_vanilla + "seed" + str(seed) + "/" + 'rewards.npy')[0:N:10])
 
-    # Import Results
-    reward_soft = np.load(safe_maddpg_soft + 'rewards.npy')[0:N:10]
-    reward_hard = np.load(safe_maddpg_hard + 'rewards.npy')[0:N:10]
-    reward_maddpg = np.load(maddpg_vanilla + 'rewards.npy')[0:N:10]
+    	#collisions_soft = np.load(safe_maddpg_soft + "seed" + str(seed) + "/" + 'collisions.npy')[0:N]
+        collisions_hard = np.load(safe_maddpg_hard + "seed" + str(seed) + "/" + 'collisions.npy')[0:N]
+    	#collisions_maddpg = np.load(maddpg_vanilla + "seed" + str(seed) + "/" +'collisions.npy')[0:N]
 
-    collisions_soft = np.load(safe_maddpg_soft + 'collisions.npy')[0:N]
-    collisions_hard = np.load(safe_maddpg_hard + 'collisions.npy')[0:N]
-    collisions_maddpg = np.load(maddpg_vanilla + 'collisions.npy')[0:N]
-
-    infeasibilities_soft = np.load(safe_maddpg_soft + 'infeasible.npy')[0:N]
-    infeasibilities_hard = np.load(safe_maddpg_hard + 'infeasible.npy')[0:N]
-
+    	#infeasibilities_soft.append(np.load(safe_maddpg_soft + "seed" + str(seed) + "/" +'infeasible.npy')[0:N])
+        infeasibilities_hard.append(np.load(safe_maddpg_hard + "seed" + str(seed) + "/" +'infeasible.npy')[0:N])
+    
+    columns = ["episodes"] + ["seed" + str(i) for i in seed_range]
+    episode_index = np.array([int(i+1) for i in np.arange(0, N)]).reshape(N,1)
+    rewards_hard = np.array(rewards_hard).T
+    rewards_hard = np.concatenate([episode_index, rewards_hard], axis = 1)
+    rewards_hard = pd.DataFrame(rewards_hard, columns = columns)  
     # Plot Type 1: Rewards
     reward_fig = plt.figure()
-    plt.plot(reward_soft)
+    #plt.plot(reward_soft)
     plt.plot(reward_hard)
-    plt.plot(reward_maddpg)
+    #plt.plot(reward_maddpg)
     reward_fig.suptitle('Rewards')
     plt.xlabel('Episodes')
     plt.legend(['Soft MADDPG', 'Hard MADDPG', 'MADDPG'])

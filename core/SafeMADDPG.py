@@ -106,6 +106,7 @@ class SafeMADDPGagent(MADDPGagent):
     @torch.no_grad()
     def correct_actions_hard(self, state, actions, constraint):
 
+        actions = actions.numpy()
         # (1) Problem Variables
         # Problem specific constants
         I    = np.eye(self.total_action_dim)
@@ -135,6 +136,7 @@ class SafeMADDPGagent(MADDPGagent):
             self.solver_infeasible +=1
             return actions
 
+        breakpoint()
         # Count Solver interventions
         if np.linalg.norm(actions - x) > 1e-3:
             self.solver_interventions += 1

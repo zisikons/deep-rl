@@ -62,6 +62,7 @@ class SafeMADDPGagent(MADDPGagent):
         else:
             self.correct_actions = self.correct_actions_hard
 
+        self.soften = soften
 
     def reset_metrics(self):
         self.solver_interventions = 0
@@ -88,11 +89,19 @@ class SafeMADDPGagent(MADDPGagent):
         state_total  = torch.tensor(np.concatenate(state),dtype=torch.float64)
 
         # correct unsafe actions
-        action, intervention_metric = self.correct_actions(state_total, action_total, constraint)
-        
-        # transform numpy array into list of 3 actions
-        actions = np.split(action, self.N_agents)
-        return actions, intervention_metric
+        if (self.soften):
+            action, intervention_metric = self.correct_actions(state_total, action_total, constraint)
+            
+            # transform numpy array into list of 3 actions
+            actions = np.split(action, self.N_agents)
+            return actions, intervention_metric
+
+        else:
+            action = self.correct_actions(state_total,action_total, constraint)
+            
+            # transform numpy array into list of 3 actions
+            actions = np.split(action, self.N_agents)
+            return actions
 
     @torch.no_grad()
     def correct_actions_hard(self, state, actions, constraint):

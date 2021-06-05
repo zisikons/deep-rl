@@ -88,11 +88,11 @@ class SafeMADDPGagent(MADDPGagent):
         state_total  = torch.tensor(np.concatenate(state),dtype=torch.float64)
 
         # correct unsafe actions
-        action = self.correct_actions(state_total, action_total, constraint)
+        action, intervention_metric = self.correct_actions(state_total, action_total, constraint)
         
         # transform numpy array into list of 3 actions
         actions = np.split(action, self.N_agents)
-        return actions
+        return actions, intervention_metric
 
     @torch.no_grad()
     def correct_actions_hard(self, state, actions, constraint):
@@ -110,7 +110,7 @@ class SafeMADDPGagent(MADDPGagent):
 
         # (2) Problem Variables in QP form
         # Cost Function
-        q = -actions
+        q = -actions.numpy()
         P = np.eye(self.total_action_dim)
 
         # Constraints
@@ -135,6 +135,7 @@ class SafeMADDPGagent(MADDPGagent):
     @torch.no_grad()
     def correct_actions_soften(self, state, actions, constraint):
 
+        actions = actions.numpy()
         # (1) Create solver as a globar variable
         l1_penalty = 1000
 
@@ -169,14 +170,17 @@ class SafeMADDPGagent(MADDPGagent):
         try:
             x = solve_qp(P.astype(np.float64), q.astype(np.float64), A.astype(np.float64),
                          ub.astype(np.float64), None, None, None, None)
-
-            x = x[0:(self.total_action_dim)]
+            x = x[0:(self.total_action_dim)] 
         except:
             self.solver_infeasible +=1
             return actions
 
         # Count Solver interventions
-        if np.linalg.norm(actions - x) > 1e-3:
+        norm_diff = np.linalg.norm(actions-x)
+        if norm_diff > 1e-3:
             self.solver_interventions += 1
-
-        return x
+        
+        # calculating an intervetion metric 
+        intervention_metric = np.split(np.abs(actions - x), self.N_agents)
+        intervention_metric = [np.sum(i) for i in intervention_metric]
+        return x, intervention_metric 

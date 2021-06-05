@@ -1,6 +1,5 @@
 import os
 import numpy as np
-import ipdb
 
 import torch
 import torch.autograd
@@ -352,5 +351,4 @@ if __name__ == '__main__':
     action = torch.tensor(np.random.rand(6,))
     #state = torch.from_numpy(numpy_trash).double()
     test_MADDPG = MADDPG(3, 4, 2)
-    ipdb.set_trace()
 

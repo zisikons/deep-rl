@@ -4,6 +4,7 @@ import copy
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 import argparse
 import numpy as np
+import torch
 
 from multiagent.environment import MultiAgentEnv
 from multiagent.policy import InteractivePolicy
@@ -33,11 +34,19 @@ def get_env_params(env):
     return state_dim, action_dim, N_agents, constraint_dim
 
 def main():
+    try:
+        seed = int(sys.argv[1])
+    except:
+        print("add a seed argument when running the file. Must be a positive integer.")
+        return
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+
 
     # Usefull Directories
     abs_path = os.path.dirname(os.path.abspath(__file__)) + '/'
     constraint_networks_dir = abs_path + '../data/constraint_networks_MADDPG/'
-    output_dir = abs_path + '../data/agents/SafeMADDPG_soft/'
+    output_dir = abs_path + '../data/agents/SafeMADDPG_soft/'+ "seed" + str(seed) + '/'
 
     # Load the simulation scenario
     scenario = scenarios.load("decentralized_safe.py").Scenario()
@@ -63,7 +72,7 @@ def main():
 
     # Training Parameters
     batch_size = 128
-    episodes = 5000
+    episodes = 8000
     steps_per_episode = 300
     agent_update_rate = 100 # update agent every # episodes old:100
 
@@ -108,9 +117,7 @@ def main():
             action_copy = copy.deepcopy(action) # list is mutable
             next_state, reward, done ,_ , constraint = env.step(action_copy)
             
-            reward = [reward[i] - intervention_metric[i] for i in range(N_agents)]
             agent.memory.store(state, action, reward, next_state)
-
             # Count collisions
             for i in range(len(env.world.agents)):
                 for j in range(i + 1, len(env.world.agents), 1):

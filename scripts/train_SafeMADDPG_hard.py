@@ -16,11 +16,20 @@ from gym.wrappers.monitoring.video_recorder import VideoRecorder
 import ipdb
 
 def main():
+    
+    try:
+        seed = int(sys.argv[1])
+    except:
+        print("add a seed argument when running the file. Must be a positive integer.")
+        return
+    torch.manual_seed(seed)
+    np.random.seed(seed)
 
     # Usefull Directories
     abs_path = os.path.dirname(os.path.abspath(__file__)) + '/'
     constraint_networks_dir = abs_path + '../data/constraint_networks_MADDPG/'
-    output_dir = abs_path + '../data/agents/SafeMADDPG_hard/'
+    output_dir = abs_path + '../data/agents/SafeMADDPG_hard/' + "seed" + str(seed) + '/'
+
 
     # Load the simulation scenario
     scenario = scenarios.load("decentralized_safe.py").Scenario()
@@ -46,9 +55,9 @@ def main():
 
     # Training Parameters
     batch_size = 128
-    episodes = 10
+    episodes = 8000
     steps_per_episode = 300
-    agent_update_rate = 100 # update agent every # episodes old:100
+    agent_update_rate = 100 
 
 
     # MADDPG Agent

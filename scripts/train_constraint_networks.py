@@ -3,6 +3,10 @@ import os
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from core.constraint_network import ConstraintNetwork
 import numpy as np
+import torch 
+
+torch.manual_seed(2021) 
+np.random.seed(2021)
 
 def main():
 

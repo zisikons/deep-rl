@@ -120,7 +120,7 @@ class SafeMADDPGagent(MADDPGagent):
 
         # (2) Problem Variables in QP form
         # Cost Function
-        q = -actions.numpy()
+        q = -actions
         P = np.eye(self.total_action_dim)
 
         # Constraints
@@ -136,7 +136,6 @@ class SafeMADDPGagent(MADDPGagent):
             self.solver_infeasible +=1
             return actions
 
-        breakpoint()
         # Count Solver interventions
         if np.linalg.norm(actions - x) > 1e-3:
             self.solver_interventions += 1

@@ -16,23 +16,6 @@ from core.Noise import OUNoise
 from gym.wrappers.monitoring.video_recorder import VideoRecorder
 import ipdb
 
-
-def get_env_params(env):
-    ''' Extract the environment parameters '''
-    action_space = env.action_space         # list of agents' action spaces, each is a gym box 
-    action_dim = action_space[0].shape[0]
-
-    state_space = env.observation_space     # list of agents' state spaces, each is a gym box  
-    state_dim = state_space[0].shape[0]
-
-    constraint_space = env.constraint_space
-    constraint_dim = constraint_space[0].shape[0]
-
-    N_agents = len(state_space)
-
-    assert N_agents == len(action_space)
-    return state_dim, action_dim, N_agents, constraint_dim
-
 def main():
     try:
         seed = int(sys.argv[1])

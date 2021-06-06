@@ -345,10 +345,4 @@ class MADDPGagent:
             self.actors[i].load_state_dict(torch.load(directory + 'actor_net_'+str(i)+'.pkl'))
             self.critics[i].load_state_dict(torch.load(directory + 'critic_net_'+str(i)+'.pkl'))
 
-if __name__ == '__main__':
-
-    state = torch.tensor(np.random.rand(12,))
-    action = torch.tensor(np.random.rand(6,))
-    #state = torch.from_numpy(numpy_trash).double()
-    test_MADDPG = MADDPG(3, 4, 2)
 

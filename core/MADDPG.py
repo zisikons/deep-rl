@@ -212,7 +212,7 @@ class MADDPGagent:
 
 
     @torch.no_grad()
-    def get_action(self, state):
+    def get_action(self, state, *args):
 
         actions = []
         for i in range(self.N_agents):

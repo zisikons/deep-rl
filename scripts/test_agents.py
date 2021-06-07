@@ -116,22 +116,19 @@ def main():
         
         env = envs[agent_name]
         # evaluating the agent's performace after training 
-        rec = VideoRecorder(env, output_dirs[agent_name] +  "test_policy.mp4")
-        n_eval = 1
+        #rec = VideoRecorder(env, output_dirs[agent_name] +  "test_policy.mp4")
+        n_eval = 100
         returns = []
+        episodes_collisions = []
         print("Evaluating agent...")
         constraint = N_agents * [10*np.ones(constraint_dim)]
         for i in range(n_eval):
             print(f"Testing policy for {agent_name} : episode {i+1}/{n_eval}")
             state = env.reset()
             cumulative_return = 0
+            episode_collisions = 0
             env.reset()
             for t in range(steps_per_episode):
-                if i <= 10:
-                    if hasattr(env.unwrapped, 'automatic_rendering_callback'):
-                        env.unwrapped.automatic_rendering_callback = rec.capture_frame
-                    else:
-                        rec.capture_frame()
                 # Taking an action in the environment
                 result = agent.get_action(state, constraint)
                 if type(result) == tuple:
@@ -144,17 +141,24 @@ def main():
 
                 # update state 
                 state = next_state
+                
+                # Count collisions
+                for k in range(len(env.world.agents)):
+                    for j in range(k + 1, len(env.world.agents), 1):
+                        if scenario.is_collision(env.world.agents[k],env.world.agents[j]):
+                            episode_collisions += 1
 
+                
                 if all(done) == True:
                     break
             returns.append(cumulative_return)
+            episodes_collisions.append(episode_collisions)
             print(f"Achieved {cumulative_return:.2f} return.")
-            if i == 10:
-                rec.close()
-                print("Saved video of 10 episodes to 'policy.mp4'.")
-        env.close()
-        print(f"Average return: {np.mean(returns):.2f}")
-
+            if i == n_eval-1:
+                env.close()
+                print(f"Average return: {np.mean(returns):.2f}")
+                episodes_collisions = np.array(episodes_collisions)
+                np.save(output_dirs[agent_name]+"test_collisions.npy", episodes_collisions)
 
 if __name__ == "__main__":
     main()

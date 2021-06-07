@@ -11,9 +11,12 @@ from multiagent.policy import InteractivePolicy
 import multiagent.scenarios as scenarios
 
 from core.SafeMADDPG import SafeMADDPGagent
+from core.MADDPG import MADDPGagent
 from core.Noise import OUNoise
 
 from gym.wrappers.monitoring.video_recorder import VideoRecorder
+
+from inspect import signature
 import ipdb
 
 def main():
@@ -35,7 +38,7 @@ def main():
     agent_paths  = [abs_path + '../data/agents/SafeMADDPG_soft/'+ "seed" + str(seed) + '/', 
                     abs_path + '../data/agents/SafeMADDPG_soft_reward/'+ "seed" + str(seed) + '/',
                     abs_path + '../data/agents/SafeMADDPG_hard/'+ "seed" + str(seed) + '/',
-                    abs_path + '../data/agents/SafeMADDPG_hard/'+ "seed" + str(seed) + '/']
+                    abs_path + '../data/agents/MADDPG/'+ "seed" + str(seed) + '/']
 
     output_dirs = dict(zip(agent_names, agent_paths))
     
@@ -69,16 +72,18 @@ def main():
     
     # Load agents
     agents = []
+    
     # soft agent
-    #agent_soft = SafeMADDPGagent(state_dim = state_dim,
-    #                                  act_dim = act_dim,
-    #                                  N_agents = N_agents,
-    #                                  batch_size = batch_size,
-    #                                  constraint_dim = constraint_dim,
-    #                                  constraint_networks_dir=constraint_networks_dir)
-    #agent_soft.load_params(output_dirs['SafeMADDPG_soft'])
-    # agents.append(agent_soft) 
-    # soft reward agent
+    agent_soft = SafeMADDPGagent(state_dim = state_dim,
+                                      act_dim = act_dim,
+                                      N_agents = N_agents,
+                                      batch_size = batch_size,
+                                      constraint_dim = constraint_dim,
+                                      constraint_networks_dir=constraint_networks_dir)
+    agent_soft.load_params(output_dirs['SafeMADDPG_soft'])
+    agents.append(agent_soft) 
+    
+    #soft reward agent
     agent_soft_reward  = SafeMADDPGagent(state_dim = state_dim,
                                     act_dim = act_dim,
                                     N_agents = N_agents,
@@ -97,27 +102,27 @@ def main():
                            constraint_networks_dir=constraint_networks_dir,
                            soften = False)
     agent_hard.load_params(output_dirs['SafeMADDPG_hard'])
-    
+    agents.append(agent_hard) 
     # vanilla agent
-    #agent_vanilla = MADDPGagent(state_dim = state_dim,
-    #                    act_dim = act_dim,
-    #                    N_agents = num_agents,
-    #                    critic_state_mask = np.arange(state_dim).tolist(),
-    #                    batch_size = batch_size) 
-    #agent_vanilla.load_params(output_dirs['SafeMADDPG_hard'])
-    #agents.append(agent_vanilla)
+    agent_vanilla = MADDPGagent(state_dim = state_dim,
+                        act_dim = act_dim,
+                        N_agents = N_agents,
+                        critic_state_mask = np.arange(state_dim).tolist(),
+                        batch_size = batch_size) 
+    agent_vanilla.load_params(output_dirs['MADDPG'])
+    agents.append(agent_vanilla)
     agents = dict(zip(agent_names, agents))
     for agent_name, agent in agents.items():
         
         env = envs[agent_name]
         # evaluating the agent's performace after training 
         rec = VideoRecorder(env, output_dirs[agent_name] +  "test_policy.mp4")
-        n_eval = 10
+        n_eval = 1
         returns = []
         print("Evaluating agent...")
-
+        constraint = N_agents * [10*np.ones(constraint_dim)]
         for i in range(n_eval):
-            print(f"Testing policy: episode {i+1}/{n_eval}")
+            print(f"Testing policy for {agent_name} : episode {i+1}/{n_eval}")
             state = env.reset()
             cumulative_return = 0
             env.reset()
@@ -128,7 +133,11 @@ def main():
                     else:
                         rec.capture_frame()
                 # Taking an action in the environment
-                action = agent.get_action(state,constraint)
+                result = agent.get_action(state, constraint)
+                if type(result) == tuple:
+                    action = result[0]
+                else:
+                    action = result
                 action_copy = copy.deepcopy(action)
                 next_state, reward,done ,_ , constraint = env.step(action_copy)
                 cumulative_return += sum(reward)/N_agents

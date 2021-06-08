@@ -29,7 +29,7 @@ def main():
     # Usefull Directories
     abs_path = os.path.dirname(os.path.abspath(__file__)) + '/'
     constraint_networks_dir = abs_path + '../data/constraint_networks_MADDPG/'
-    output_dir = abs_path + '../data/agents/SafeMADDPG_soft/'+ "seed" + str(seed) + '/'
+    output_dir = abs_path + '../data/agents/SafeMADDPG_soft_reward/'+ "seed" + str(seed) + '/'
 
     # Load the simulation scenario
     scenario = scenarios.load("decentralized_safe.py").Scenario()
@@ -100,8 +100,8 @@ def main():
             action_copy = copy.deepcopy(action) # list is mutable
             next_state, reward, done ,_ , constraint = env.step(action_copy)
             
-            reward = [reward[i] - intervention_metric[i] for i in range(N_agents)]
-            agent.memory.store(state, action, reward, next_state)
+            reward_intervention = [reward[i] - 10*intervention_metric[i] for i in range(N_agents)]
+            agent.memory.store(state, action, reward_intervention, next_state)
 
             # Count collisions
             for i in range(len(env.world.agents)):

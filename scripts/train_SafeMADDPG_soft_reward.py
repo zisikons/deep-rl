@@ -75,7 +75,7 @@ def main():
     collisions = []
     infeasible = []
     total_collisions = 0
-
+    intervention_metric_start = 0
     for episode in range(episodes):
         # Preprocessing
         state = env.reset()
@@ -86,11 +86,11 @@ def main():
         episode_collisions = 0
         constraint = N_agents * [5*np.ones(constraint_dim)]
 
+        print("Noise variance: ", noise.sigma)
         for step in range(steps_per_episode):
 
             # Compute safe action
             action, intervention_metric = agent.get_action(state,constraint)
-
             # Add exploration noise
             action = np.concatenate(action)
             action = noise.get_action(action, step, episode)
@@ -100,7 +100,12 @@ def main():
             action_copy = copy.deepcopy(action) # list is mutable
             next_state, reward, done ,_ , constraint = env.step(action_copy)
             
-            reward_intervention = [reward[i] - 10*intervention_metric[i] for i in range(N_agents)]
+            if (episode >= intervention_metric_start):
+                scale_intervention = 1/(10*np.log(1-noise.sigma))
+            else:
+                scale_intervention = 0
+
+            reward_intervention = [reward[i] + scale_intervention*intervention_metric[i] for i in range(N_agents)]
             agent.memory.store(state, action, reward_intervention, next_state)
 
             # Count collisions

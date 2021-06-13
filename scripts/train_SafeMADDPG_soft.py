@@ -95,7 +95,8 @@ def main():
             action = np.concatenate(action)
             action = noise.get_action(action, step, episode)
             action = np.split(action, N_agents)
-
+            # correct the action here might be better?
+            
             # Feed the action to the environment
             action_copy = copy.deepcopy(action) # list is mutable
             next_state, reward, done ,_ , constraint = env.step(action_copy)

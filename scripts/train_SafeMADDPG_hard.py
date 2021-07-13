@@ -90,11 +90,15 @@ def main():
         for step in range(steps_per_episode):
 
             # Compute safe action
-            action = agent.get_action(state,constraint)
+            #action = agent.get_action(state,constraint)
+            action = agent.get_action2(state,constraint)
 
             # Add exploration noise
             action = np.concatenate(action)
             action = noise.get_action(action, step, episode)
+            action = np.split(action, N_agents)
+            
+            action = agent.correct_actions_hard2(state, action,constraint)
             action = np.split(action, N_agents)
 
             # Feed the action to the environment

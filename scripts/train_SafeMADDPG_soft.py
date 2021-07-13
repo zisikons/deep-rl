@@ -89,14 +89,16 @@ def main():
         for step in range(steps_per_episode):
 
             # Compute safe action
-            action, intervention_metric = agent.get_action(state,constraint)
+            #action, intervention_metric = agent.get_action(state,constraint)
+            action = agent.get_action2(state,constraint)
 
             # Add exploration noise
             action = np.concatenate(action)
             action = noise.get_action(action, step, episode)
             action = np.split(action, N_agents)
             # correct the action here might be better?
-            
+            action,_ = agent.correct_actions(state, action, constraint)
+            action = np.split(action, N_agents)
             # Feed the action to the environment
             action_copy = copy.deepcopy(action) # list is mutable
             next_state, reward, done ,_ , constraint = env.step(action_copy)

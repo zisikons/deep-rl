@@ -1,9 +1,9 @@
 import os
 import sys
 min_seed = 5
-max_seed = 16
-filename = "train_SafeMADDPG_soft.py" #ziyad 
-#filename = "train_SafeMADDPG_soft_reward.py"# dimitris
+max_seed = 6
+#filename = "train_SafeMADDPG_soft.py" #ziyad 
+filename = "train_SafeMADDPG_soft_reward.py"
 #filename = "train_SafeMADDPG_hard.py" #athina
 #filename = "train_MADDPG.py" #kostas
 

@@ -21,7 +21,7 @@ class SafeMADDPGagent(MADDPGagent):
     #        gamma=0.99, tau=1e-2, max_memory_size=16000,  soften = True):
 
     def __init__(self, N_agents, state_dim, act_dim,
-                 constraint_networks_dir, constraint_dim,critic_state_mask = [0,1,2,3,-1,-2], col_margin=0.3,
+                 constraint_networks_dir, constraint_dim,critic_state_mask = [0,1,2,3,-1,-2], col_margin=0.31,
                  actor_learning_rate=1e-4,
                  critic_learning_rate=1e-3, gamma=0.99, tau=1e-2, max_memory_size=30000,
                  hidden_size_critic = [500, 500], hidden_size_actor = [100, 100],
@@ -102,6 +102,7 @@ class SafeMADDPGagent(MADDPGagent):
             # transform numpy array into list of 3 actions
             actions = np.split(action, self.N_agents)
             return actions
+
     @torch.no_grad()
     def get_action2(self, state, constraint):
 

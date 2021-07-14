@@ -16,7 +16,7 @@ from gym.wrappers.monitoring.video_recorder import VideoRecorder
 import ipdb
 
 def main():
-    
+
     try:
         seed = int(sys.argv[1])
     except:
@@ -51,13 +51,13 @@ def main():
     act_dim   = env_params["act_dim"]
     constraint_dim = env_params["constraint_dim"]
     N_agents = env_params["num_agents"]
-    print(env_params) 
+    print(env_params)
 
     # Training Parameters
     batch_size = 128
     episodes = 8000
     steps_per_episode = 300
-    agent_update_rate = 100 
+    agent_update_rate = 100
 
 
     # MADDPG Agent
@@ -91,14 +91,19 @@ def main():
 
             # Compute safe action
             #action = agent.get_action(state,constraint)
-            action = agent.get_action2(state,constraint)
+            action = agent.get_action2(state, constraint)
 
             # Add exploration noise
             action = np.concatenate(action)
             action = noise.get_action(action, step, episode)
             action = np.split(action, N_agents)
-            
-            action = agent.correct_actions_hard2(state, action,constraint)
+
+            ################# Debugging #################
+            action_debug     = copy.deepcopy(action)
+            constraint_debug = copy.deepcopy(constraint)
+            #############################################
+
+            action = agent.correct_actions_hard2(state, action, constraint)
             action = np.split(action, N_agents)
 
             # Feed the action to the environment
@@ -111,7 +116,15 @@ def main():
             for i in range(len(env.world.agents)):
                 for j in range(i + 1, len(env.world.agents), 1):
                     if scenario.is_collision(env.world.agents[i],env.world.agents[j]):
+
+                        # Detect collision and store related data
                         episode_collisions += 1
+
+                        # store: state, action (before collision) and constraint_sig
+                        print('Save and exiting')
+                        np.savez('problem.npz', state, action_debug, constraint_debug)
+                        return
+
 
 
             # Check if episode terminates

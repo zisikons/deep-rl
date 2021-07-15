@@ -29,7 +29,7 @@ def main():
     # Usefull Directories
     abs_path = os.path.dirname(os.path.abspath(__file__)) + '/'
     constraint_networks_dir = abs_path + '../data/constraint_networks_MADDPG/'
-    output_dir = abs_path + '../data/agents/MADDPG/' + "seed" + str(seed) + '/'
+    output_dir = abs_path + '../data/agents/MADDPG/' + "seed" + str(seed) + '_new/'
  
     # Load the simulation scenario
     scenario = scenarios.load("decentralized_safe.py").Scenario()

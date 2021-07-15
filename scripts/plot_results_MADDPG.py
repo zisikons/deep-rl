@@ -16,11 +16,11 @@ def main():
         os.makedirs(target_dir)
 
     true_run = True
-    N = 8000
+    N = 100
 
-    seed_range = np.arange(5,7)
+    seed_range = np.arange(10,11)
 
-    safe_maddpg_soft = abs_path + '../data/agents/SafeMADDPG_soft/'
+    safe_maddpg_soft = abs_path + '../data/agents/SafeMADDPG_soft_/'
     safe_maddpg_hard = abs_path + '../data/agents/SafeMADDPG_hard/'
     maddpg_vanilla   = abs_path + '../data/agents/MADDPG/'
      
@@ -34,15 +34,15 @@ def main():
 
         # Import Results
         #rewards_soft.append(np.load(safe_maddpg_soft +"seed" + str(seed) + "/" + 'rewards.npy')[0:N:10])
-        rewards_hard.append(np.load(safe_maddpg_hard + "seed" + str(seed) + "/"+'rewards.npy')[0:N])
+        rewards_hard.append(np.load(safe_maddpg_hard + "seed" + str(seed) + "_new/"+'rewards.npy')[0:N])
         #rewards_maddpg.append(np.load(maddpg_vanilla + "seed" + str(seed) + "/" + 'rewards.npy')[0:N:10])
 
-    	#collisions_soft = np.load(safe_maddpg_soft + "seed" + str(seed) + "/" + 'collisions.npy')[0:N]
-        collisions_hard = np.load(safe_maddpg_hard + "seed" + str(seed) + "/" + 'collisions.npy')[0:N]
-    	#collisions_maddpg = np.load(maddpg_vanilla + "seed" + str(seed) + "/" +'collisions.npy')[0:N]
+        collisions_soft = np.load(safe_maddpg_soft + "seed" + str(seed) + "_new/" + 'collisions.npy')[0:N]
+        collisions_hard = np.load(safe_maddpg_hard + "seed" + str(seed) + "_new/" + 'collisions.npy')[0:N]
+        #collisions_maddpg = np.load(maddpg_vanilla + "seed" + str(seed) + "/" +'collisions.npy')[0:N]
 
-    	#infeasibilities_soft.append(np.load(safe_maddpg_soft + "seed" + str(seed) + "/" +'infeasible.npy')[0:N])
-        infeasibilities_hard.append(np.load(safe_maddpg_hard + "seed" + str(seed) + "/" +'infeasible.npy')[0:N])
+        #infeasibilities_soft.append(np.load(safe_maddpg_soft + "seed" + str(seed) + "/" +'infeasible.npy')[0:N])
+        infeasibilities_hard.append(np.load(safe_maddpg_hard + "seed" + str(seed) + "_new/" +'infeasible.npy')[0:N])
     
     columns = ["episodes"] + ["seed" + str(i) for i in seed_range]
     episode_index = np.array([int(i+1) for i in np.arange(0, N)]).reshape(N,1)
@@ -52,7 +52,7 @@ def main():
     # Plot Type 1: Rewards
     reward_fig = plt.figure()
     #plt.plot(reward_soft)
-    plt.plot(reward_hard)
+    plt.plot(rewards_hard)
     #plt.plot(reward_maddpg)
     reward_fig.suptitle('Rewards')
     plt.xlabel('Episodes')
@@ -64,10 +64,11 @@ def main():
     collision_fig = plt.figure()
     plt.plot(collisions_soft)
     plt.plot(collisions_hard)
-    plt.plot(collisions_maddpg)
+    #plt.plot(collisions_maddpg)
     collision_fig.suptitle('Collisions')
     plt.xlabel('Episodes')
-    plt.legend(['Soft MADDPG', 'Hard MADDPG', 'MADDPG'])
+    #plt.legend(['Soft MADDPG', 'Hard MADDPG', 'MADDPG'])
+    plt.legend(['Soft MADDPG', 'Hard MADDPG'])
     plt.show()
     collision_fig.savefig(target_dir +'collisions.pdf', bbox_inches='tight')
 

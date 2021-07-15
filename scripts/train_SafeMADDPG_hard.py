@@ -28,7 +28,7 @@ def main():
     # Usefull Directories
     abs_path = os.path.dirname(os.path.abspath(__file__)) + '/'
     constraint_networks_dir = abs_path + '../data/constraint_networks_MADDPG/'
-    output_dir = abs_path + '../data/agents/SafeMADDPG_hard/' + "seed" + str(seed) + '/'
+    output_dir = abs_path + '../data/agents/SafeMADDPG_hard/' + "seed" + str(seed) + '_new/'
 
 
     # Load the simulation scenario
@@ -98,11 +98,12 @@ def main():
             action = noise.get_action(action, step, episode)
             action = np.split(action, N_agents)
 
+            '''
             ################# Debugging #################
             action_debug     = copy.deepcopy(action)
             constraint_debug = copy.deepcopy(constraint)
             #############################################
-
+            '''
             action = agent.correct_actions_hard2(state, action, constraint)
             action = np.split(action, N_agents)
 
@@ -119,12 +120,13 @@ def main():
 
                         # Detect collision and store related data
                         episode_collisions += 1
-
+                        
+                        '''
                         # store: state, action (before collision) and constraint_sig
                         print('Save and exiting')
                         np.savez('problem.npz', state, action_debug, constraint_debug)
                         return
-
+                        '''
 
 
             # Check if episode terminates

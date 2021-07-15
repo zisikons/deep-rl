@@ -86,7 +86,7 @@ def main():
 
     # Evaluate networks
     #actions = np.concatenate(action)
-    state = torch.tensor(np.concatenate(state))
+    state_torch = torch.tensor(np.concatenate(state))
 
     # (1) Problem Variables
     # Problem specific constants
@@ -96,12 +96,12 @@ def main():
 
     # Formulate the constraints using neural networks
     G    = np.zeros([agent.total_action_dim, agent.total_action_dim])
-    for i, net in enumerate(agent.constraint_nets):
-        G[i, :] = net(state).detach().numpy()
+    for k, net in enumerate(agent.constraint_nets):
+        G[k, :] = net(state_torch).detach().numpy()
 
 
     predicted_constr = constraint.flatten() + G @ corrected_action
-    ipdb.set_trace()
+    
     # Specify agents to plot
     i = 0
     j = 2

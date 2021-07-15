@@ -29,7 +29,7 @@ def main():
     # Usefull Directories
     abs_path = os.path.dirname(os.path.abspath(__file__)) + '/'
     constraint_networks_dir = abs_path + '../data/constraint_networks_MADDPG/'
-    output_dir = abs_path + '../data/agents/SafeMADDPG_soft/'+ "seed" + str(seed) + '/'
+    output_dir = abs_path + '../data/agents/SafeMADDPG_soft/'+ "seed" + str(seed) + '_new/'
 
     # Load the simulation scenario
     scenario = scenarios.load("decentralized_safe.py").Scenario()
@@ -136,13 +136,14 @@ def main():
 
         print("Interventions =" + str(agent.get_interventions()))
         print("Problem Infeasible =" + str(agent.get_infeasible()))
-
+    
     # Save Experiment results
     agent.save_params(output_dir)   # agent networks
     np.save(output_dir + 'rewards', np.array(rewards))
     np.save(output_dir + 'collisions', np.array(collisions))
     np.save(output_dir + 'infeasible', np.array(infeasible))
 
+    '''
     # evaluating the agent's performace after training 
     rec = VideoRecorder(env, output_dir +  "policy.mp4")
     episode_length = steps_per_episode
@@ -179,6 +180,6 @@ def main():
             print("Saved video of 10 episodes to 'policy.mp4'.")
     env.close()
     print(f"Average return: {np.mean(returns):.2f}")
- 
+    '''
 if __name__ == "__main__":
     main()

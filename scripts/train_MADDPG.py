@@ -29,7 +29,7 @@ def main():
     # Usefull Directories
     abs_path = os.path.dirname(os.path.abspath(__file__)) + '/'
     constraint_networks_dir = abs_path + '../data/constraint_networks_MADDPG/'
-    output_dir = abs_path + '../data/agents/MADDPG/' + "seed" + str(seed) + '_new/'
+    output_dir = abs_path + '../data/agents/MADDPG/' + "seed" + str(seed) + '_dist/'
  
     # Load the simulation scenario
     scenario = scenarios.load("decentralized_safe.py").Scenario()
@@ -84,6 +84,11 @@ def main():
             # Add exploration noise
             action = np.concatenate(action)
             action = noise.get_action(action, step, episode)
+            
+            # apply disturbance
+            disturbance = 2*np.random.rand(N_agents*act_dim)-1
+            action = action + disturbance
+
             action = np.split(action, num_agents)
 
             # Feed the action to the environment

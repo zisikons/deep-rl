@@ -94,12 +94,18 @@ def main():
             action = agent.get_action(np.concatenate(state), constraint)
             action = np.concatenate(action)
             action = noise.get_action(action, step, episode)
+            
+            disturbance = 2*np.random.rand(num_agents*act_dim)-1
+            disurbance  = np.split(disturbance,num_agents)
+                
             action = np.split(action, num_agents)
+                        
             action_copy = copy.deepcopy(action) # list is mutable
+             
+
             next_state, reward,done ,_ , constraint = env.step(action_copy)
 
             agent.memory.store(np.concatenate(state), np.concatenate(action), reward[0], np.concatenate(next_state))
-
             # Count collisions
             for i in range(len(env.world.agents)):
                 for j in range(i + 1, len(env.world.agents), 1):

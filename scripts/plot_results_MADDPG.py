@@ -16,11 +16,11 @@ def main():
         os.makedirs(target_dir)
 
     true_run = True
-    N = 100
+    N = 8000
 
-    seed_range = np.arange(10,11)
+    seed_range = np.arange(5,11)
 
-    safe_maddpg_soft = abs_path + '../data/agents/SafeMADDPG_soft_/'
+    safe_maddpg_soft = abs_path + '../data/agents/SafeMADDPG_soft/'
     safe_maddpg_hard = abs_path + '../data/agents/SafeMADDPG_hard/'
     maddpg_vanilla   = abs_path + '../data/agents/MADDPG/'
      

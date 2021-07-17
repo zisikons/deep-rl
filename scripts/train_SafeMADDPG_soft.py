@@ -29,7 +29,7 @@ def main():
     # Usefull Directories
     abs_path = os.path.dirname(os.path.abspath(__file__)) + '/'
     constraint_networks_dir = abs_path + '../data/constraint_networks_MADDPG/'
-    output_dir = abs_path + '../data/agents/SafeMADDPG_soft/'+ "seed" + str(seed) + '_new/'
+    output_dir = abs_path + '../data/agents/SafeMADDPG_soft/'+ "seed" + str(seed) + '_dist/'
 
     # Load the simulation scenario
     scenario = scenarios.load("decentralized_safe.py").Scenario()
@@ -98,6 +98,8 @@ def main():
             action = np.split(action, N_agents)
             # correct the action here might be better?
             action,_ = agent.correct_actions(state, action, constraint)
+            disturbance = 2*np.random.rand(N_agents*act_dim)-1
+            action = action + disturbance
             action = np.split(action, N_agents)
             # Feed the action to the environment
             action_copy = copy.deepcopy(action) # list is mutable

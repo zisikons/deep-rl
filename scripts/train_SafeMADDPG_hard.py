@@ -28,7 +28,7 @@ def main():
     # Usefull Directories
     abs_path = os.path.dirname(os.path.abspath(__file__)) + '/'
     constraint_networks_dir = abs_path + '../data/constraint_networks_MADDPG/'
-    output_dir = abs_path + '../data/agents/SafeMADDPG_hard/' + "seed" + str(seed) + '_new/'
+    output_dir = abs_path + '../data/agents/SafeMADDPG_hard/' + "seed" + str(seed) + '_dist/'
 
 
     # Load the simulation scenario
@@ -91,20 +91,26 @@ def main():
 
             # Compute safe action
             #action = agent.get_action(state,constraint)
-            action = agent.get_action2(state, constraint)
-
+            action = agent.get_action2(state, constraint) 
+            #action = agent.correct_actions_hard2(state, action, constraint)  
+            
             # Add exploration noise
             action = np.concatenate(action)
-            action = noise.get_action(action, step, episode)
+            action = noise.get_action(action, step, episode) 
             action = np.split(action, N_agents)
-
             '''
             ################# Debugging #################
             action_debug     = copy.deepcopy(action)
             constraint_debug = copy.deepcopy(constraint)
             #############################################
             '''
-            action = agent.correct_actions_hard2(state, action, constraint)
+            action = agent.correct_actions_hard2(state, action, constraint)  
+            
+            # apply disturbance
+            if step%1 == 0: 
+                disturbance = 2*np.random.rand(N_agents*act_dim)-1
+            action = action + disturbance 
+            
             action = np.split(action, N_agents)
 
             # Feed the action to the environment

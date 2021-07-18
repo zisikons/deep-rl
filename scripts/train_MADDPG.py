@@ -86,7 +86,7 @@ def main():
             action = noise.get_action(action, step, episode)
             
             # apply disturbance
-            disturbance = 2*np.random.rand(N_agents*act_dim)-1
+            disturbance = 2*np.random.rand(num_agents*act_dim)-1
             action = action + disturbance
 
             action = np.split(action, num_agents)

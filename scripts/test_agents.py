@@ -29,16 +29,18 @@ def main():
     np.random.seed(seed)
 
 
-    agents_names = ["SafeMADDPG_soft", "SafeMADDPG_soft_reward", "SafeMADDPG_hard", "MADDPG"]  
+    agents_names = ["SafeMADDPG_soft", "SafeMADDPG_hard", "MADDPG"]  
     agent_paths  = []  
+
+    # choose experiment
+    experiment = 'dist' #  or new
     # Usefull Directories
     abs_path = os.path.dirname(os.path.abspath(__file__)) + '/'
     constraint_networks_dir           = abs_path + '../data/constraint_networks_MADDPG/'
     agent_names = ["SafeMADDPG_soft", "SafeMADDPG_soft_reward", "SafeMADDPG_hard", "MADDPG"]  
-    agent_paths  = [abs_path + '../data/agents/SafeMADDPG_soft/'+ "seed" + str(seed) + '/', 
-                    abs_path + '../data/agents/SafeMADDPG_soft_reward/'+ "seed" + str(seed) + '/',
-                    abs_path + '../data/agents/SafeMADDPG_hard/'+ "seed" + str(seed) + '/',
-                    abs_path + '../data/agents/MADDPG/'+ "seed" + str(seed) + '/']
+    agent_paths  = [abs_path + '../data/agents/SafeMADDPG_soft/'+ "seed" + str(seed) + '_' + experiment + '/',  
+                    abs_path + '../data/agents/SafeMADDPG_hard/'+ "seed" + str(seed) + '_' + experiment + '/',
+                    abs_path + '../data/agents/MADDPG/'+ "seed" + str(seed) + '_' + experiment +  '/']
 
     output_dirs = dict(zip(agent_names, agent_paths))
     
@@ -83,16 +85,6 @@ def main():
     agent_soft.load_params(output_dirs['SafeMADDPG_soft'])
     agents.append(agent_soft) 
     
-    #soft reward agent
-    agent_soft_reward  = SafeMADDPGagent(state_dim = state_dim,
-                                    act_dim = act_dim,
-                                    N_agents = N_agents,
-                            batch_size = batch_size,
-                            constraint_dim = constraint_dim,
-                            constraint_networks_dir=constraint_networks_dir)
-
-    agent_soft_reward.load_params(output_dirs['SafeMADDPG_soft_reward'])
-    agents.append(agent_soft_reward)
     # hard agent
     agent_hard = SafeMADDPGagent(state_dim = state_dim,
                            act_dim = act_dim,
@@ -131,6 +123,9 @@ def main():
             for t in range(steps_per_episode):
                 # Taking an action in the environment
                 result = agent.get_action(state, constraint)
+                if experiment == 'dist':
+                    result = action + 2*np.random.rand() - 1
+                
                 if type(result) == tuple:
                     action = result[0]
                 else:

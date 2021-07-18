@@ -29,7 +29,7 @@ def main():
     np.random.seed(seed)
 
 
-    agents_names = ["SafeMADDPG_soft", "SafeMADDPG_hard", "MADDPG"]  
+    agent_names = ["SafeMADDPG_soft", "SafeMADDPG_hard", "MADDPG"]  
     agent_paths  = []  
 
     # choose experiment
@@ -37,7 +37,7 @@ def main():
     # Usefull Directories
     abs_path = os.path.dirname(os.path.abspath(__file__)) + '/'
     constraint_networks_dir           = abs_path + '../data/constraint_networks_MADDPG/'
-    agent_names = ["SafeMADDPG_soft", "SafeMADDPG_soft_reward", "SafeMADDPG_hard", "MADDPG"]  
+    #agent_names = ["SafeMADDPG_soft", "SafeMADDPG_soft_reward", "SafeMADDPG_hard", "MADDPG"]  
     agent_paths  = [abs_path + '../data/agents/SafeMADDPG_soft/'+ "seed" + str(seed) + '_' + experiment + '/',  
                     abs_path + '../data/agents/SafeMADDPG_hard/'+ "seed" + str(seed) + '_' + experiment + '/',
                     abs_path + '../data/agents/MADDPG/'+ "seed" + str(seed) + '_' + experiment +  '/']
@@ -74,6 +74,7 @@ def main():
     
     # Load agents
     agents = []
+
     
     # soft agent
     agent_soft = SafeMADDPGagent(state_dim = state_dim,
@@ -95,6 +96,7 @@ def main():
                            soften = False)
     agent_hard.load_params(output_dirs['SafeMADDPG_hard'])
     agents.append(agent_hard) 
+
     # vanilla agent
     agent_vanilla = MADDPGagent(state_dim = state_dim,
                         act_dim = act_dim,
@@ -103,6 +105,7 @@ def main():
                         batch_size = batch_size) 
     agent_vanilla.load_params(output_dirs['MADDPG'])
     agents.append(agent_vanilla)
+
     agents = dict(zip(agent_names, agents))
     for agent_name, agent in agents.items():
         
@@ -123,13 +126,18 @@ def main():
             for t in range(steps_per_episode):
                 # Taking an action in the environment
                 result = agent.get_action(state, constraint)
-                if experiment == 'dist':
-                    result = action + 2*np.random.rand() - 1
-                
+
                 if type(result) == tuple:
                     action = result[0]
                 else:
                     action = result
+
+                if experiment == 'dist':
+                    action = np.concatenate(action) + 2*np.random.rand(N_agents * act_dim) - 1
+                    action = np.split(action, N_agents)
+
+
+
                 action_copy = copy.deepcopy(action)
                 next_state, reward,done ,_ , constraint = env.step(action_copy)
                 cumulative_return += sum(reward)/N_agents

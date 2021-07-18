@@ -58,7 +58,7 @@ class SafeMADDPGagent(MADDPGagent):
 
         # Choose Solver
         if soften:
-            self.correct_actions = self.correct_actions_soften2
+            self.correct_actions = self.correct_actions_soften
         else:
             self.correct_actions = self.correct_actions_hard
 

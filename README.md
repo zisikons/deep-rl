@@ -1,7 +1,8 @@
-# deep-rl
-Deep Learning Project (Fall Semester 2020) :rocket:
+# Safe Deep Reinforcement Learning for Multi-Agent Systems with Continuous Action Spaces
 
-This repository contains the source code and the implementation details for the [Deep Learning](http://www.da.inf.ethz.ch/teaching/2020/DeepLearning/) course offered at ETH Zurich.
+This repository contains the source code and the implementation details for the paper (add paper link)
+accepted at [RL4RealLife @ICML2021](https://sites.google.com/view/RL4RealLife)
+
 
 #### Useful Links:
 - Course [webpage](http://www.da.inf.ethz.ch/teaching/2020/DeepLearning/)
@@ -10,7 +11,7 @@ This repository contains the source code and the implementation details for the 
 The objective of this project is to develop a safe variation of the Deep Deterministic Policy Gradient (DDPG). More specifically, the goal is to modify the potentially unsafe DDPG-based agent's action via projecting it on a safe subspace space using a QP Solver. More details can be found in [1]. This project relies heavily on the [OpenAI’s Multi-Agent Particle Environments](https://github.com/openai/multiagent-particle-envs) [2], which is the simulator used to train and evaluate the agents.
 
 ## Installation
-To install and execute the project's source code follow the steps in the following snippet:
+To install and execute the project's source code follow the steps described in the following snippet:
 **WARNING:** Installs packages
 
 ```

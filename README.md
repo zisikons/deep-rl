@@ -3,10 +3,6 @@
 This repository contains the source code and the implementation details for the paper (add paper link)
 accepted at [RL4RealLife @ICML2021](https://sites.google.com/view/RL4RealLife)
 
-
-#### Useful Links:
-- Course [webpage](http://www.da.inf.ethz.ch/teaching/2020/DeepLearning/)
-
 ## Project Description
 The objective of this project is to develop a safe variation of the Deep Deterministic Policy Gradient (DDPG). More specifically, the goal is to modify the potentially unsafe DDPG-based agent's action via projecting it on a safe subspace space using a QP Solver. More details can be found in [1]. This project relies heavily on the [OpenAI’s Multi-Agent Particle Environments](https://github.com/openai/multiagent-particle-envs) [2], which is the simulator used to train and evaluate the agents.
 

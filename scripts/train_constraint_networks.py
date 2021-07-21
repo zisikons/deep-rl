@@ -28,6 +28,7 @@ def main():
     state = np.genfromtxt(datasets_dir + "D_state_decentralized.csv", delimiter = ',')
     action = np.genfromtxt(datasets_dir + "D_action_decentralized.csv", delimiter = ',')
     constraint_diff = np.genfromtxt(datasets_dir + "D_constraint_decentralized.csv", delimiter = ',')
+    
     # Remove Indices
     state  = state[:, 1:]
     action = action[:, 1:]

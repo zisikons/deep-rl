@@ -57,8 +57,7 @@ def main():
     batch_size = 128
     episodes = 8000
     steps_per_episode = 300
-    agent_update_rate = 100 # update agent every # episodes old:100
-
+    agent_update_rate = 100 # update agent every
 
     # MADDPG Agent
     agent = SafeMADDPGagent(state_dim = state_dim,
@@ -96,11 +95,13 @@ def main():
             action = np.concatenate(action)
             action = noise.get_action(action, step, episode)
             action = np.split(action, N_agents)
+            
             # correct the action here might be better?
             action,_ = agent.correct_actions(state, action, constraint)
             disturbance = 2*np.random.rand(N_agents*act_dim)-1
             action = action + disturbance
             action = np.split(action, N_agents)
+            
             # Feed the action to the environment
             action_copy = copy.deepcopy(action) # list is mutable
             next_state, reward, done ,_ , constraint = env.step(action_copy)

@@ -19,12 +19,11 @@ import ipdb
 def main():
     try:
         seed = int(sys.argv[1])
-    except:
-        print("add a seed argument when running the file. Must be a positive integer.")
-        return
-    torch.manual_seed(seed)
-    np.random.seed(seed)
+        torch.manual_seed(seed)
+        np.random.seed(seed)
 
+    except: 
+        seed = '' 
 
     # Usefull Directories
     abs_path = os.path.dirname(os.path.abspath(__file__)) + '/'
@@ -57,8 +56,8 @@ def main():
     batch_size = 128
     episodes = 8000
     steps_per_episode = 300
-    agent_update_rate = 100 # update agent every
-
+    agent_update_rate = 100  # update agent every
+    agent_updates     = 50   # number of sampled batches
     # MADDPG Agent
     agent = SafeMADDPGagent(state_dim = state_dim,
                             act_dim = act_dim,
@@ -67,7 +66,7 @@ def main():
                             constraint_dim = constraint_dim,
                             constraint_networks_dir=constraint_networks_dir)
 
-    # Will stay as is or?
+    # Exploratory noise
     noise = OUNoise(act_dim = act_dim,num_agents=N_agents, act_low = -1, act_high = 1, decay_period = episodes)
 
     rewards = []
@@ -88,8 +87,7 @@ def main():
         for step in range(steps_per_episode):
 
             # Compute safe action
-            #action, intervention_metric = agent.get_action(state,constraint)
-            action = agent.get_action2(state,constraint)
+            action = agent.get_action(state,constraint)
 
             # Add exploration noise
             action = np.concatenate(action)
@@ -127,7 +125,7 @@ def main():
         if(episode % agent_update_rate == 0 and episode > 0):
             # Perform 200 updates (for the time fixed)
             print("updating agent ...")
-            for _ in range(50):
+            for _ in range(agent_updates):
                 agent.update()
             print("done")
 

@@ -19,11 +19,11 @@ def main():
 
     try:
         seed = int(sys.argv[1])
+        torch.manual_seed(seed)
+        np.random.seed(seed)
+
     except:
-        print("add a seed argument when running the file. Must be a positive integer.")
-        return
-    torch.manual_seed(seed)
-    np.random.seed(seed)
+        seed = ''
 
     # Usefull Directories
     abs_path = os.path.dirname(os.path.abspath(__file__)) + '/'
@@ -58,7 +58,7 @@ def main():
     episodes = 8000
     steps_per_episode = 300
     agent_update_rate = 100
-
+    agent_updates     = 50
 
     # MADDPG Agent
     agent = SafeMADDPGagent(state_dim = state_dim,
@@ -89,22 +89,16 @@ def main():
 
         for step in range(steps_per_episode):
 
-            # Compute safe action
-            #action = agent.get_action(state,constraint)
-            action = agent.get_action2(state, constraint) 
-            #action = agent.correct_actions_hard2(state, action, constraint)  
+            # Compute unsafe action
+            action = agent.get_action(state, constraint) 
             
             # Add exploration noise
             action = np.concatenate(action)
             action = noise.get_action(action, step, episode) 
             action = np.split(action, N_agents)
-            '''
-            ################# Debugging #################
-            action_debug     = copy.deepcopy(action)
-            constraint_debug = copy.deepcopy(constraint)
-            #############################################
-            '''
-            action = agent.correct_actions_hard2(state, action, constraint)  
+            
+            # Compute safe projection
+            action = agent.correct_actions(state, action, constraint)  
             
             # apply disturbance
             if step%1 == 0: 
@@ -126,14 +120,7 @@ def main():
 
                         # Detect collision and store related data
                         episode_collisions += 1
-                        
-                        '''
-                        # store: state, action (before collision) and constraint_sig
-                        print('Save and exiting')
-                        np.savez('problem.npz', state, action_debug, constraint_debug)
-                        return
-                        '''
-
+                         
 
             # Check if episode terminates
             if all(done) == True or step == steps_per_episode-1:
@@ -148,7 +135,7 @@ def main():
         if(episode % agent_update_rate == 0 and episode > 0):
             # Perform 200 updates (for the time fixed)
             print("updating agent ...")
-            for _ in range(50):
+            for _ in range(agent_updates):
                 agent.update()
             print("done")
 
@@ -167,6 +154,7 @@ def main():
     np.save(output_dir + 'collisions', np.array(collisions))
     np.save(output_dir + 'infeasible', np.array(infeasible))
 
+    '''
     # evaluating the agent's performace after training 
     rec = VideoRecorder(env, output_dir +  "policy.mp4")
     episode_length = steps_per_episode
@@ -203,6 +191,7 @@ def main():
             print("Saved video of 10 episodes to 'policy.mp4'.")
     env.close()
     print(f"Average return: {np.mean(returns):.2f}")
- 
+    '''
+
 if __name__ == "__main__":
     main()

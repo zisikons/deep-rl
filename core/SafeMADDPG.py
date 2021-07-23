@@ -15,11 +15,7 @@ from core.constraint_network import ConstraintNetwork
 import ipdb
 
 
-class SafeMADDPGagent(MADDPGagent):
-    #def __init__(self, state_dim, act_dim, constraint_dim, num_agents, constraint_networks_dir, col_margin = 0.35 ,
-    #        hidden_size=256, actor_learning_rate=1e-4, critic_learning_rate=1e-3,
-    #        gamma=0.99, tau=1e-2, max_memory_size=16000,  soften = True):
-
+class SafeMADDPGagent(MADDPGagent): 
     def __init__(self, N_agents, state_dim, act_dim,
                  constraint_networks_dir, constraint_dim,critic_state_mask = [0,1,2,3,-1,-2], col_margin=0.33,
                  actor_learning_rate=1e-4,
@@ -74,6 +70,7 @@ class SafeMADDPGagent(MADDPGagent):
     def get_infeasible(self):
         return self.solver_infeasible
 
+    '''
     @torch.no_grad()
     def get_action(self, state, constraint):
 
@@ -103,8 +100,10 @@ class SafeMADDPGagent(MADDPGagent):
             actions = np.split(action, self.N_agents)
             return actions
 
+    '''
+
     @torch.no_grad()
-    def get_action2(self, state, constraint):
+    def get_action(self, state, constraint):
 
         # Original MADDPG
         actions = []
@@ -116,8 +115,9 @@ class SafeMADDPGagent(MADDPGagent):
         action_total = torch.cat(actions).numpy()
         return actions
 
+    '''
     @torch.no_grad()
-    def correct_actions_hard(self, state, actions, constraint):
+    def correct_actions_hard_old(self, state, actions, constraint):
 
         actions = actions.numpy()
         # (1) Problem Variables
@@ -154,9 +154,10 @@ class SafeMADDPGagent(MADDPGagent):
             self.solver_interventions += 1
 
         return x
+    '''
 
     @torch.no_grad()
-    def correct_actions_hard2(self, state, actions, constraint):
+    def correct_actions_hard(self, state, actions, constraint):
 
         actions = np.concatenate(actions)
         state = torch.tensor(np.concatenate(state))
@@ -197,7 +198,7 @@ class SafeMADDPGagent(MADDPGagent):
         return x
 
     @torch.no_grad()
-    def correct_actions_soften2(self, state, actions, constraint):
+    def correct_actions_soften(self, state, actions, constraint):
 
         actions = np.concatenate(actions)
         state = torch.tensor(np.concatenate(state))
@@ -250,8 +251,9 @@ class SafeMADDPGagent(MADDPGagent):
         intervention_metric = [np.sum(i) for i in intervention_metric]
         return x, intervention_metric
 
+    '''
     @torch.no_grad()
-    def correct_actions_soften(self, state, actions, constraint):
+    def correct_actions_soften_old(self, state, actions, constraint):
 
         actions = actions.numpy()
         # (1) Create solver as a globar variable
@@ -302,3 +304,5 @@ class SafeMADDPGagent(MADDPGagent):
         intervention_metric = np.split(np.abs(actions - x), self.N_agents)
         intervention_metric = [np.sum(i) for i in intervention_metric]
         return x, intervention_metric 
+    '''
+

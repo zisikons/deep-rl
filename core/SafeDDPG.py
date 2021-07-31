@@ -11,7 +11,7 @@ import scipy.linalg
 from qpsolvers import solve_qp
 
 from core.DDPG import DDPGagent
-from core.constraint_network import ConstraintNetwork
+from core.ConstraintNetwork import ConstraintNetwork
 
 
 class SafeDDPGagent(DDPGagent):

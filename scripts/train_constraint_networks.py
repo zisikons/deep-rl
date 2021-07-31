@@ -1,7 +1,7 @@
 import sys
 import os
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
-from core.constraint_network import ConstraintNetwork
+from core.ConstraintNetwork import ConstraintNetwork
 import numpy as np
 import torch 
 

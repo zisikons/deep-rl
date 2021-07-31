@@ -31,17 +31,15 @@ qpsolvers
 ## Execution
 Once the code is downloaded and everything is set, in order to train an agent you need to do the following:
 ```
-python3 scripts/collect_data.py        # Uses the simulator to generate the datasets for the
-                                       # constraint sensitivity Neural Networks
+python3 scripts/collect_data.py                  # Uses the simulator to generate the datasets for the
+                                                 # constraint sensitivity Neural Networks
                                     
-python3 core/constraint_network.py     # Trains the constraint sensitivity Neural Networks
-                                       # (not required for the vanilla DDPG agent) 
+python3 scripts/train_constraint_networks.py     # Trains the constraint sensitivity Neural Networks
+                                                 # (not required for the vanilla MADDPG agent) 
 
-python3 scripts/train_<agent_type>.py  # Trains one of the 3 RL agents that were developed
-                                       # during this project
+python3 scripts/train_<agent_type>.py            # Trains one of the 3 RL agents that were developed
                                        
-python3 scripts/plot_results.py        # Generates plot to compare the 3 agents
-                                       # (requires training of all agents)
+python3 scripts/test_<agent_type>.py             # Tests one of the 3 RL agents that were developed            
 ```
 *Note: The above sequence takes a considerable amount of time.*
 

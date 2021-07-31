@@ -31,9 +31,12 @@ def main():
     output_dir = abs_path + '../data/agents/SafeMADDPG_soft/'+ "seed" + str(seed) + '_dist/'
 
     # Load the simulation scenario
-    scenario = scenarios.load("decentralized_safe.py").Scenario()
+    safe_initialization = False
+    apply_disturbance   = True
+    
+    scenario = scenarios.load("decentralized_safe.py").Scenario(safe_initialization)
     world    = scenario.make_world()
-
+    
     # Environment Setup
     env = MultiAgentEnv(world,
                         scenario.reset_world,
@@ -49,7 +52,8 @@ def main():
     state_dim = env_params["state_dim"]
     act_dim   = env_params["act_dim"]
     constraint_dim = env_params["constraint_dim"]
-    N_agents = env_params["num_agents"]
+    N_agents = env_params["num_agents"] 
+    disturbance_range = {'lower':-1, 'upper':1}
     print(env_params) 
 
     # Training Parameters
@@ -58,6 +62,7 @@ def main():
     steps_per_episode = 300
     agent_update_rate = 100  # update agent every
     agent_updates     = 50   # number of sampled batches
+    
     # MADDPG Agent
     agent = SafeMADDPGagent(state_dim = state_dim,
                             act_dim = act_dim,
@@ -96,8 +101,10 @@ def main():
             
             # correct the action here might be better?
             action,_ = agent.correct_actions(state, action, constraint)
-            disturbance = 2*np.random.rand(N_agents*act_dim)-1
-            action = action + disturbance
+            if apply_disturbance:
+                # apply disturbance
+                disturbance = (disturbance_range['upper'] - disturbance_range['lower'])*np.random.rand(N_agents*act_dim) + disturbance_range['lower']
+                action = action + disturbance
             action = np.split(action, N_agents)
             
             # Feed the action to the environment

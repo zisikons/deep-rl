@@ -20,19 +20,21 @@ def main():
 
     try:
         seed = int(sys.argv[1])
+        torch.manual_seed(seed)
+        np.random.seed(seed)
     except:
-        print("add a seed argument when running the file. Must be a positive integer.")
-        return
-    torch.manual_seed(seed)
-    np.random.seed(seed)
- 
+        seed = ''
+    
     # Usefull Directories
     abs_path = os.path.dirname(os.path.abspath(__file__)) + '/'
     constraint_networks_dir = abs_path + '../data/constraint_networks_MADDPG/'
     output_dir = abs_path + '../data/agents/MADDPG/' + "seed" + str(seed) + '_dist/'
  
     # Load the simulation scenario
-    scenario = scenarios.load("decentralized_safe.py").Scenario()
+    safe_initialization = False
+    apply_disturbance   = True
+    
+    scenario = scenarios.load("decentralized_safe.py").Scenario(safe_initialization)
     world    = scenario.make_world()
 
     # Environment Setup
@@ -45,12 +47,15 @@ def main():
                         constraint_callback = scenario.constraints,
                         shared_viewer = True)
 
-    # get the scenario parameters
+    # The scenario parameters
     env_params = env.get_env_parameters()
     state_dim = env_params["state_dim"] 
     act_dim   = env_params["act_dim"]
     num_agents = env_params["num_agents"]
+    disturbance_range = {'lower':-1, 'upper':1}
+
     print(env_params) 
+    
     # Training Parameters
     batch_size = 128
     episodes = 8000
@@ -85,9 +90,10 @@ def main():
             action = np.concatenate(action)
             action = noise.get_action(action, step, episode)
             
-            # apply disturbance
-            disturbance = 2*np.random.rand(num_agents*act_dim)-1
-            action = action + disturbance
+            if apply_disturbance:
+                # apply disturbance
+                disturbance = (disturbance_range['upper'] - disturbance_range['lower'])*np.random.rand(num_agents*act_dim) + disturbance_range['lower']
+                action = action + disturbance
 
             action = np.split(action, num_agents)
 

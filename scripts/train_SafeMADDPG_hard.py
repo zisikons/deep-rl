@@ -32,7 +32,10 @@ def main():
 
 
     # Load the simulation scenario
-    scenario = scenarios.load("decentralized_safe.py").Scenario()
+    safe_initialization = False
+    apply_disturbance   = True
+
+    scenario = scenarios.load("decentralized_safe.py").Scenario(safe_initialization)
     world    = scenario.make_world()
 
     # Environment Setup
@@ -45,12 +48,13 @@ def main():
                         constraint_callback = scenario.constraints,
                         shared_viewer = True)
 
-    # get the scenario parameters
+    # The scenario parameters
     env_params = env.get_env_parameters()
     state_dim = env_params["state_dim"]
     act_dim   = env_params["act_dim"]
     constraint_dim = env_params["constraint_dim"]
-    N_agents = env_params["num_agents"]
+    N_agents = env_params["num_agents"] 
+    disturbance_range = {'lower':-1, 'upper':1}
     print(env_params)
 
     # Training Parameters
@@ -69,7 +73,6 @@ def main():
                             constraint_networks_dir=constraint_networks_dir,
                             soften = False)
 
-    # Will stay as is or?
     noise = OUNoise(act_dim = act_dim,num_agents=N_agents, act_low = -1, act_high = 1, decay_period = episodes)
 
     rewards = []
@@ -101,10 +104,10 @@ def main():
             action = agent.correct_actions(state, action, constraint)  
             
             # apply disturbance
-            if step%1 == 0: 
-                disturbance = 2*np.random.rand(N_agents*act_dim)-1
-            action = action + disturbance 
-            
+            if apply_disturbance:
+                disturbance = (disturbance_range['upper'] - disturbance_range['lower'])*np.random.rand(N_agents*act_dim) + disturbance_range['lower']
+                action = action + disturbance
+
             action = np.split(action, N_agents)
 
             # Feed the action to the environment

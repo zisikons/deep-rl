@@ -10,31 +10,7 @@ import copy
 from multiagent.environment import MultiAgentEnv
 from multiagent.policy import InteractivePolicy
 import multiagent.scenarios as scenarios
-
-def get_env_params(env):
-    ''' Extract the environment parameters '''
-    # Action Dimension (for a single agent)
-    action_space = env.action_space         # list of agents' action spaces, each is a gym box 
-    s_action_dim = action_space[0].shape[0]
-
-    # States (for a single agent)
-    state_space  = env.observation_space     # list of agents' state spaces, each is a gym box  
-    s_state_dim   = state_space[0].shape[0]
-
-    # Constraints (multiagent)
-    constraint_space = env.constraint_space
-    s_constraint_dim   = constraint_space[0].shape[0]
-
-    # Number of agents
-    num_agents = len(state_space)
-
-    # Return state/action/constraint dimensions from the centralized agent's POV
-    state_dim      = s_state_dim * num_agents
-    action_dim     = s_action_dim * num_agents
-    constraint_dim = s_constraint_dim * num_agents
-
-    #assert num_agents == len(action_space)
-    return state_dim, action_dim, constraint_dim, num_agents
+np.random.seed(2021)
 
 def main():
 
@@ -44,7 +20,7 @@ def main():
     output_dir        = '../data/'
 
     # Load the simulation scenario
-    scenario = scenarios.load("centralized_safe.py").Scenario()
+    scenario = scenarios.load("decentralized_safe.py").Scenario()
     world    = scenario.make_world()
 
     # Environment Setup
@@ -56,17 +32,22 @@ def main():
                         constraint_callback = scenario.constraints,
                         shared_viewer = True)
 
-    # Parse experiment dimensions
-    state_dim, action_dim, constraint_dim, num_agents = get_env_params(env)
-
+    # The scenario parameters
+    env_params = env.get_env_parameters()
+    state_dim = env_params["state_dim"]
+    action_dim   = env_params["act_dim"]
+    constraint_dim = env_params["constraint_dim"]
+    num_agents = env_params["num_agents"]
+    
     # Data Storage Containers
     size = episodes*(steps_per_episode - 1)
-    state_buf        = np.zeros([size, state_dim])
-    action_buf      = np.zeros([size, action_dim])
-    constraint_diff = np.zeros([size, constraint_dim])
+    state_buf       = np.zeros([size, state_dim*num_agents])
+    action_buf      = np.zeros([size, action_dim*num_agents])
+    constraint_diff = np.zeros([size, constraint_dim*num_agents])
 
     # Simulate the environment and generate dataset for constraints networks
     for episode in range(episodes):
+        print(f'episode={episode}')
 
         # Episode "Preprocessing"
         state          = env.reset()
@@ -75,7 +56,7 @@ def main():
         for step in range(steps_per_episode):
 
             # Simulation
-            action = np.random.uniform(-1, 1, action_dim)
+            action = np.random.uniform(-1, 1, action_dim*num_agents)
             action = np.split(action, num_agents)
 
             # Deep Copy the agent's action (otherwise it's altered in env.step())
@@ -104,9 +85,9 @@ def main():
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    pd.DataFrame(state_buf).to_csv(output_dir + "D_state.csv")
-    pd.DataFrame(action_buf).to_csv(output_dir + "D_action.csv")
-    pd.DataFrame(constraint_diff).to_csv(output_dir + "D_constraint.csv")
+    pd.DataFrame(state_buf).to_csv(output_dir + "D_state_decentralized.csv")
+    pd.DataFrame(action_buf).to_csv(output_dir + "D_action_decentralized.csv")
+    pd.DataFrame(constraint_diff).to_csv(output_dir + "D_constraint_decentralized.csv")
     print("Done... Data saved")
 
 if __name__ == "__main__":

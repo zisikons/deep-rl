@@ -36,7 +36,7 @@ def main():
     # Usefull Directories
     abs_path = os.path.dirname(os.path.abspath(__file__)) + '/'
     constraint_networks_dir = abs_path + '../data/constraint_networks/'
-    output_dir = abs_path + '../data/agents/SafeDDPG_hard/'
+    output_dir = abs_path + '../data/agents/SafeDDPG_soft/'
 
     # Load the simulation scenario
     scenario = scenarios.load("centralized_safe.py").Scenario()
@@ -59,7 +59,7 @@ def main():
     batch_size = 128
     episodes   = 8000
     steps_per_episode = 300
-    soften = False
+    soften = True
 
     # Define Agent
     agent = SafeDDPGagent(state_dim = state_dim,
@@ -114,6 +114,7 @@ def main():
             elif step == steps_per_episode-1:
                 print(f"Episode: {episode+1}/{episodes}, episode reward {episode_reward}, collisions {episode_collisions}")
 
+        # Agent Update
         if (episode != 0):
             if(episode%100 == 0):
                 print("updating agent ...")

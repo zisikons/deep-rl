@@ -1,16 +1,13 @@
-# deep-rl
-Deep Learning Project (Fall Semester 2020) :rocket:
+# Safe Deep Reinforcement Learning for Multi-Agent Systems with Continuous Action Spaces
 
-This repository contains the source code and the implementation details for the [Deep Learning](http://www.da.inf.ethz.ch/teaching/2020/DeepLearning/) course offered at ETH Zurich.
-
-#### Useful Links:
-- Course [webpage](http://www.da.inf.ethz.ch/teaching/2020/DeepLearning/)
+This repository contains the source code and the implementation details for the paper (add paper link)
+accepted at [RL4RealLife @ICML2021](https://sites.google.com/view/RL4RealLife)
 
 ## Project Description
-The objective of this project is to develop a safe variation of the Deep Deterministic Policy Gradient (DDPG). More specifically, the goal is to modify the potentially unsafe DDPG-based agent's action via projecting it on a safe subspace space using a QP Solver. More details can be found in [1]. This project relies heavily on the [OpenAI’s Multi-Agent Particle Environments](https://github.com/openai/multiagent-particle-envs) [2], which is the simulator used to train and evaluate the agents.
+The objective of this project is to develop a safe variation of the Multiagent Deep Deterministic Policy Gradient (MADDPG). More specifically, the goal is to modify the potentially unsafe MADDPG-based agents' action via projecting it on a safe subspace space using a QP Solver. More details can be found in [1]. This project relies heavily on the [OpenAI’s Multi-Agent Particle Environments](https://github.com/openai/multiagent-particle-envs) [2], which is the simulator used to train and evaluate the agents.
 
 ## Installation
-To install and execute the project's source code follow the steps in the following snippet:
+To install and execute the project's source code follow the steps described in the following snippet:
 **WARNING:** Installs packages
 
 ```
@@ -34,17 +31,15 @@ qpsolvers
 ## Execution
 Once the code is downloaded and everything is set, in order to train an agent you need to do the following:
 ```
-python3 scripts/collect_data.py        # Uses the simulator to generate the datasets for the
-                                       # constraint sensitivity Neural Networks
+python3 scripts/collect_data.py                  # Uses the simulator to generate the datasets for the
+                                                 # constraint sensitivity Neural Networks
                                     
-python3 core/constraint_network.py     # Trains the constraint sensitivity Neural Networks
-                                       # (not required for the vanilla DDPG agent) 
+python3 scripts/train_constraint_networks.py     # Trains the constraint sensitivity Neural Networks
+                                                 # (not required for the vanilla MADDPG agent) 
 
-python3 scripts/train_<agent_type>.py  # Trains one of the 3 RL agents that were developed
-                                       # during this project
+python3 scripts/train_<agent_type>.py            # Trains one of the 3 RL agents that were developed
                                        
-python3 scripts/plot_results.py        # Generates plot to compare the 3 agents
-                                       # (requires training of all agents)
+python3 scripts/test_<agent_type>.py             # Tests one of the 3 RL agents that were developed            
 ```
 *Note: The above sequence takes a considerable amount of time.*
 

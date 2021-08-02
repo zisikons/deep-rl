@@ -139,42 +139,5 @@ def main():
     np.save(output_dir + 'rewards', np.array(rewards))
     np.save(output_dir + 'collisions', np.array(collisions))
 
-    # evaluating the agent's performace after training 
-    rec = VideoRecorder(env, output_dir +  "policy.mp4")
-    episode_length = steps_per_episode
-    n_eval = 10
-    returns = []
-    print("Evaluating agent...")
-
-    for i in range(n_eval):
-        print(f"Testing policy: episode {i+1}/{n_eval}")
-        state = env.reset()
-        cumulative_return = 0
-        env.reset()
-        for t in range(episode_length):
-            if i <= 10:
-                if hasattr(env.unwrapped, 'automatic_rendering_callback'):
-                    env.unwrapped.automatic_rendering_callback = rec.capture_frame
-                else:
-                    rec.capture_frame()
-            # Taking an action in the environment
-            action = agent.get_action(state)
-            action_copy = copy.deepcopy(action)
-            next_state, reward,done ,_ , constraint = env.step(action_copy)
-            cumulative_return += reward[0]
-            
-            # update state 
-            state = next_state
-
-            if all(done) == True:
-                break
-        returns.append(cumulative_return)
-        print(f"Achieved {cumulative_return:.2f} return.")
-        if i == 10:
-            rec.close()
-            print("Saved video of 10 episodes to 'policy.mp4'.")
-    env.close()
-    print(f"Average return: {np.mean(returns):.2f}")
- 
 if __name__ == "__main__":
     main()

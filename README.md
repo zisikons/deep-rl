@@ -43,6 +43,9 @@ python3 scripts/test_<agent_type>.py             # Tests one of the 3 RL agents 
 ```
 *Note: The above sequence takes a considerable amount of time.*
 
+## Approach Summary
+![alt text](http://url/to/img.png)
+
 
 ## References
 <a id="1">[1]</a>

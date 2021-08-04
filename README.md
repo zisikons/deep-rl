@@ -44,9 +44,8 @@ python3 scripts/test_<agent_type>.py             # Tests one of the 3 RL agents 
 *Note: The above sequence takes a considerable amount of time.*
 
 ## Approach Summary
-![alt text](https://github.com/zisikons/deep-rl/blob/main/poster.jpeg)
 <p align="center">
-  <img width="460" height="300" src="https://github.com/zisikons/deep-rl/blob/main/poster.jpeg">
+  <img width="920" height="600" src="https://github.com/zisikons/deep-rl/blob/main/poster.jpeg">
 </p>
 
 

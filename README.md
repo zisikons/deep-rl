@@ -1,7 +1,6 @@
 # Safe Deep Reinforcement Learning for Multi-Agent Systems with Continuous Action Spaces
 
-This repository contains the source code and the implementation details for the paper (add paper link)
-accepted at [RL4RealLife @ICML2021](https://sites.google.com/view/RL4RealLife)
+This repository contains the source code and the implementation details for the [paper](https://arxiv.org/abs/2108.03952) titled Safe Deep Reinforcement Learning for Multi-Agent Systems with Continuous Action Spaces accepted at [RL4RealLife @ICML2021](https://sites.google.com/view/RL4RealLife)
 
 ## Project Description
 The objective of this project is to develop a safe variation of the Multiagent Deep Deterministic Policy Gradient (MADDPG). More specifically, the goal is to modify the potentially unsafe MADDPG-based agents' action via projecting it on a safe subspace space using a QP Solver. More details can be found in [1]. This project relies heavily on the [OpenAI’s Multi-Agent Particle Environments](https://github.com/openai/multiagent-particle-envs) [2], which is the simulator used to train and evaluate the agents.
